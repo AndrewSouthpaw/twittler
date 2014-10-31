@@ -38,15 +38,18 @@ display on the stream, and displays them. Only displays most recent
 MAX_TWITTLES_DISPLAYED twittles.
 */
 var updateStream = function() {
+  // Collect new tweets based on last displayed tweet
   var newTweets = 
     displayedStream.slice(_.indexOf(displayedStream, lastTweet) + 1);
 
+  // Format and display each new tweet
   _.each(newTweets, function(tweet) {
     var $twittle = formatTwittle(tweet);
     $twittle.prependTo($('body'));
     lastTweet = tweet;
   });
 
+  // Truncate stream display to MAX_TWITTLES_DISPLAYED
   $('div.twittle').slice(MAX_TWITTLES_DISPLAYED).remove();
 
 };
