@@ -26,7 +26,8 @@ jQuery Twittle object.
 */
 var formatTwittle = function(tweet) {
   var $twittle = $('<div class="twittle"></div>');
-  $twittle.text('@' + tweet.user + ': ' + tweet.message);
+  $twittle.append($('<div class="message">').text('@' + tweet.user + ': ' + tweet.message))
+          .append($('<div class="timedisplay">').text(tweet.created_at));
   return $twittle;
 };
 
@@ -64,7 +65,7 @@ $(document).ready(function(){
   var $body = $('body');
   $body.html('');
   displayedStream = streams.home;
-
-  setInterval(updateStream, 1000);
+  updateStream();
+  // setInterval(updateStream, 1000);
 
 });
