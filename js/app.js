@@ -17,7 +17,8 @@ Global variables
 */
 var lastTweet;  // tracks most recent Twittle displayed in stream
 var displayedStream;  // stream currently being displays
-
+var visitor = "me";   // dummy variable for name of user
+streams.users[visitor] = [];
 
 /* Function: formatTwittle
 ===============================================================================
@@ -25,11 +26,16 @@ Takes a tweet object, formats it to display in HTML. Returns a formatted
 jQuery Twittle object.
 */
 var formatTwittle = function(tweet) {
-  var $twittle = $('<div class="twittle"></div>');
-  $twittle.append($('<div class="message">').text('@' + tweet.user + ': ' + tweet.message))
-          .append($('<div class="timedisplay">').text(tweet.created_at));
+  var $twittle = 
+    $('<div class="twittle panel panel-default"></div>')
+    .append($('<div class="panel-body"></div>')
+              .append($('<div class="message">').text('@' + tweet.user + ': ' + tweet.message))
+              .append($('<div class="timedisplay">').text(tweet.created_at))
+            );
+
   return $twittle;
 };
+
 
 
 /* Function: updateStream
@@ -46,7 +52,7 @@ var updateStream = function() {
   // Format and display each new tweet
   _.each(newTweets, function(tweet) {
     var $twittle = formatTwittle(tweet);
-    $twittle.prependTo($('body'));
+    $twittle.prependTo($('#twittle-stream'));
     lastTweet = tweet;
   });
 
@@ -62,10 +68,16 @@ var updateStream = function() {
 */
 
 $(document).ready(function(){
-  var $body = $('body');
-  $body.html('');
   displayedStream = streams.home;
   updateStream();
-  // setInterval(updateStream, 1000);
+  setInterval(updateStream, 1000);
+
+  // Event listener to create Twittle
+  $('#btn-create-twittle').click(function() {
+    var msg = $('#text-create-twittle').val();
+    writeTweet(msg);
+    $('#text-create-twittle').val('');
+    updateStream();
+  })
 
 });

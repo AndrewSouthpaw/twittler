@@ -2,4 +2,22 @@
 
 .timedisplay{
   color:grey;
+  text-align: right;
+}
+
+.title-logo{
+  text-align:center;
+}
+
+.title-logo h1{
+  font-size:55px;
+  color:#55ACEE;
+}
+
+.title-logo img{
+  max-width:70px;
+}
+
+.title-logo h2{
+  color:#66757f;
 }
