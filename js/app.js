@@ -20,6 +20,38 @@ var displayedStream;  // stream currently being displays
 var visitor = "me";   // dummy variable for name of user
 streams.users[visitor] = [];
 
+
+/* Function: loadUserTimeline
+===============================================================================
+Loads a user's timeline into the Twittle stream.
+*/
+
+var loadUserTimeline = function() {
+  var username = $(this).text().slice(1);
+
+  // Disappear the stream to change the stream contents
+  $('#twittle-stream').fadeOut();
+
+  setTimeout(function() {
+    // Update stream contents
+    if (username === "") {
+      displayedStream = streams.home;
+      $('#twittle-stream-username').text('Twittle Stream');
+    } else {
+      displayedStream = streams.users[username];
+      $('#twittle-stream-username').text(username + "'s Twittle Stream");
+      $('#twittle-stream-home-btn').show();
+    }
+    updateStream(true);
+  }, 400);
+
+  setTimeout(function() {
+    // Reappear the stream
+    $('#twittle-stream').fadeIn();
+  }, 400);
+};
+
+
 /* Function: formatTwittle
 ===============================================================================
 Takes a tweet object, formats it to display in HTML. Returns a formatted
@@ -29,10 +61,13 @@ var formatTwittle = function(tweet) {
   var $twittle = 
     $('<div class="twittle panel panel-default"></div>')
     .append($('<div class="panel-body"></div>')
-              .append($('<div class="message">').text('@' + tweet.user + ': ' + tweet.message))
-              .append($('<div class="timedisplay">').text(tweet.created_at))
+            .append($('<div class="username">')
+                    .append($('<a></a>').text('@' + tweet.user)))
+            .append($('<div class="message">').text(tweet.message))
+            .append($('<div class="timedisplay">').text(tweet.created_at))
             );
 
+  $twittle.find('a').click(loadUserTimeline);
   return $twittle;
 };
 
@@ -44,7 +79,13 @@ Checks for new tweets in the displayed stream. If present, formats these for
 display on the stream, and displays them. Only displays most recent 
 MAX_TWITTLES_DISPLAYED twittles.
 */
-var updateStream = function() {
+var updateStream = function(isNewDisplay) {
+  // Reset 'last tweet' if displaying a new timeline
+  if (isNewDisplay) {
+    lastTweet = undefined;
+    $('#twittle-stream').empty();
+  };
+
   // Collect new tweets based on last displayed tweet
   var newTweets = 
     displayedStream.slice(_.indexOf(displayedStream, lastTweet) + 1);
@@ -78,6 +119,12 @@ $(document).ready(function(){
     writeTweet(msg);
     $('#text-create-twittle').val('');
     updateStream();
+  })
+
+  // Event listener for Home button on Twittle Stream
+  $('#twittle-stream-home-btn').click(function() {
+    loadUserTimeline();
+    $(this).fadeOut();
   })
 
 });

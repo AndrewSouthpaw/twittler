@@ -21,3 +21,7 @@
 .title-logo h2{
   color:#66757f;
 }
+
+#twittle-stream-home-btn {
+  display:none;
+}
