@@ -3,6 +3,10 @@
 File: app.js
 ===============================================================================
 Provides functionality to run Twittle site.
+
+Created by: Andrew Smith
+Release: 1.0
+Date: 2014-11-01
 */
 
 
