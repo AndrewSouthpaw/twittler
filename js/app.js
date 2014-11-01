@@ -68,7 +68,7 @@ var formatTwittle = function(tweet) {
             .append($('<div class="username">')
                     .append($('<a></a>').text('@' + tweet.user)))
             .append($('<div class="message">').text(tweet.message))
-            .append($('<div class="timedisplay">').text(tweet.created_at))
+            .append($('<div class="timedisplay">').text(moment(tweet.created_at).fromNow()))
             );
 
   $twittle.find('a').click(loadUserTimeline);
