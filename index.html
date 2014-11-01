@@ -1,27 +1,83 @@
+<!--
+  Created by: Andrew Smith
+  Release: 1.0
+  Date: 2014-11-01
+  Using "data_generator.js" script file created by Hack Reactor.
+-->
+
 <!DOCTYPE html>
 <html>
-  <head>
-    <script src="jquery.js"></script>
-    <script src="data_generator.js"></script>
-  </head>
-  <body>
-    <script>
+<head>
 
-      $(document).ready(function(){
-        var $body = $('body');
-        $body.html('');
+  <!-- JQuery -->
+  <script src="js/jquery.js"></script>
 
-        var index = streams.home.length - 1;
-        while(index >= 0){
-          var tweet = streams.home[index];
-          var $tweet = $('<div></div>');
-          $tweet.text('@' + tweet.user + ': ' + tweet.message);
-          $tweet.appendTo($body);
-          index -= 1;
-        }
+  <!-- Twitter Bootstrap -->
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- / Twitter Bootstrap -->
 
-      });
 
-    </script>
-  </body>
+  <script src="js/data_generator.js"></script>
+  <script type="text/javascript" src="js/underscore-min.js"></script>
+  <script src="js/app.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/app.css"></link>
+</head>
+<body>
+  <div class='container'>
+    <!-- Title logo -->
+    <div class='row title-logo'>
+      <h1 class=''>
+        <img src="img/Twitter_logo_blue.png" alt="Twittler Logo">
+        Twittler
+      </h1>
+      <h2>
+        The Gathering Place For Twits.
+      </h2>
+    </div>
+
+
+    <!-- Main content -->
+    <div class='row'>
+      <div class='col-md-5 col-md-offset-1'>
+
+        <!-- Twittle Stream -->
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <span id="twittle-stream-username">Twittle Stream</span>
+              <span class="glyphicon glyphicon-home" id="twittle-stream-home-btn"></span>
+            </h3>
+          </div>
+          <!-- Twittles -->
+          <div class="panel-body" id="twittle-stream">
+
+          </div>
+        </div>
+
+      </div>
+      <div class='col-md-5'>
+
+        <!-- Create Twittle Panel -->
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title">Twittle About Something</h3>
+          </div>
+          <div class="panel-body">
+            <textarea class="form-control" rows="3" id="text-create-twittle"
+              placeholder="lolsrsly?"></textarea>
+            <br>  
+            <button type="button" class="btn btn-info" id="btn-create-twittle">
+              Twittle!
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</body>
 </html>
