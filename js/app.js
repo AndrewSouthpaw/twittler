@@ -13,7 +13,7 @@ Date: 2014-11-02
 /* Constants
 ===============================================================================
 */
-var MAX_TWITTLES_DISPLAYED = 20;
+var MAX_TWITTLES_DISPLAYED = 25;
 
 /*
 Global variables
@@ -241,5 +241,12 @@ $(document).ready(function(){
 
   // Event listener for Follow button to Follow Twit
   $('#form-follow-twit button').click(buttonFollowTwit);
+
+  // Listener for Twittle display limit
+  $('#select-twittle-display-limit').change(function() {
+    MAX_TWITTLES_DISPLAYED = $(this).val();
+    updateStream(true);
+  })
+
 
 });
