@@ -33,7 +33,6 @@ Loads a user's timeline into the Twittle stream.
 var loadStream = _.throttle(function(stream, username) {
   
   // Throttle to elegantly handle multiple concurrent calls to loadStream
-  console.log('throttled');
   var isSameStream = displayedStream === stream;
 
   if (isSameStream) { return updateStream(true); };
@@ -103,7 +102,6 @@ MAX_TWITTLES_DISPLAYED twittles.
 var updateStream = function(isNewDisplay) {
   // Reset 'last tweet' if displaying a new timeline
   if (isNewDisplay) {
-    console.log('new display');
     lastTweet = undefined;
     $('#twittle-stream').empty();
   };
