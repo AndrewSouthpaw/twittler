@@ -136,23 +136,33 @@ var loadUserTwitList = function() {
         .append($('<div class="panel-body"></div>')
                   .text(" " + username)
                   .prepend($('<span class="glyphicon glyphicon-user"></span>'))
-                  .append($('<span class="glyphicon glyphicon-ban-circle" style="float:right;"></span>')));
+                  .append($('<span class="glyphicon glyphicon-ban-circle btn-stop-following-twit"' + 
+                          'data-username="'+username+'" style="float:right;"' +
+                          '</span>')));
 
+    $html.find('.btn-stop-following-twit').click(function() {
+      var username = $(this).data('username');
+      stopFollowingTwit(username);
+      $(this).parent().parent().remove();
+    });
     $('#panel-twit-list').append($html);
     
   })
+};
 
 
-/*
-<div class="panel panel-default">
-  <div class="panel-body">
-    Basic panel example
-  </div>
-</div>
+/* Function: stopFollowingTwit
+===============================================================================
+Removes the Twit from the list of Following, and refreshes the stream.
 */
 
-
-};
+var stopFollowingTwit = function(username) {
+  var index = twitListFollowing.indexOf(username);
+  if (index > -1) {
+    twitListFollowing.splice(index, 1);
+  }
+  updateStream(true);
+}
 
 
 /* DOM Ready
