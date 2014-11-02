@@ -30,46 +30,43 @@ streams.users[visitor] = [];
 Loads a user's timeline into the Twittle stream.
 */
 
-var loadStream = function(stream, username) {
+var loadStream = _.throttle(function(stream, username) {
   
   // Throttle to elegantly handle multiple concurrent calls to loadStream
-  var throttled = _.throttle(function() {
-      console.log('throttled');
-      var isSameStream = displayedStream === stream;
-  
-      if (isSameStream) { return updateStream(true); };
-  
-      // Disappear the stream to change the stream contents
-      if (!isSameStream) {
-        $('#twittle-stream').fadeOut();
-      }
-  
-      displayedStream = stream;
-      // Update stream contents after disappear animation finishes
-      setTimeout(function() {
-        if (displayedStream === streams.home) {
-          $('#twittle-stream-username').text('Twittle Stream');
-          $('#twittle-stream-home-btn').hide();
-        } else {
-          $('#twittle-stream-username').text(username + "'s Twittle Stream");
-          $('#twittle-stream-home-btn').show();
-        }
-        updateStream(true);
-      }, 400);
-  
-      // Reappear stream
-      if (!isSameStream) {
-        setTimeout(function() {
-          // Reappear the stream
-          $('#twittle-stream').fadeIn();
-        }, 400);
-      }
+  console.log('throttled');
+  var isSameStream = displayedStream === stream;
+
+  if (isSameStream) { return updateStream(true); };
+
+  // Disappear the stream to change the stream contents
+  if (!isSameStream) {
+    $('#twittle-stream').fadeOut();
+  }
+
+  displayedStream = stream;
+  // Update stream contents after disappear animation finishes
+  setTimeout(function() {
+    if (displayedStream === streams.home) {
+      $('#twittle-stream-username').text('Twittle Stream');
+      $('#twittle-stream-home-btn').hide();
+    } else {
+      $('#twittle-stream-username').text(username + "'s Twittle Stream");
+      $('#twittle-stream-home-btn').show();
+    }
+    updateStream(true);
+  }, 400);
+
+  // Reappear stream
+  if (!isSameStream) {
+    setTimeout(function() {
+      // Reappear the stream
+      $('#twittle-stream').fadeIn();
+    }, 400);
+  }
       
-    }, 4000, {trailing: false});
 
-throttled();
 
-};
+}, 800);
 
 
 /* Function: formatTwittle
@@ -136,10 +133,10 @@ var updateStream = function(isNewDisplay) {
 $(document).ready(function(){
   displayedStream = streams.home;
   updateStream();
-  setInterval(updateStream, 1000);
+  setInterval(updateStream, 1000);  // pull in new tweets
   setInterval(function() {
     loadStream(displayedStream);
-  }, 3000);
+  }, 60000);  // reload stream contents to update relative times
 
   // Event listener to create Twittle
   $('#btn-create-twittle').click(function() {
