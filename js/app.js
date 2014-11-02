@@ -23,7 +23,7 @@ var lastTweet;  // tracks most recent Twittle displayed in stream
 var displayedStream;  // stream currently being displays
 var visitor = "me";   // dummy variable for name of user
 streams.users[visitor] = [];
-var twitlistfollowing = []  // list of Twits followed by user
+var twitListFollowing = []  // list of Twits followed by user
 
 
 /* Function: loadStream
@@ -130,6 +130,27 @@ Loads the list of Twits the user is following.
 */
 
 var loadUserTwitList = function() {
+  _.each(twitListFollowing, function(username) {
+    var $html =
+      $('<div class="panel panel-default"></div>')
+        .append($('<div class="panel-body"></div>')
+                  .text(" " + username)
+                  .prepend($('<span class="glyphicon glyphicon-user"></span>'))
+                  .append($('<span class="glyphicon glyphicon-ban-circle" style="float:right;"></span>')));
+
+    $('#panel-twit-list').append($html);
+    
+  })
+
+
+/*
+<div class="panel panel-default">
+  <div class="panel-body">
+    Basic panel example
+  </div>
+</div>
+*/
+
 
 };
 
@@ -140,7 +161,8 @@ var loadUserTwitList = function() {
 
 $(document).ready(function(){
   displayedStream = streams.home;
-  twitlistfollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
+  twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
+  loadUserTwitList();
   updateStream();
   setInterval(updateStream, 1000);  // pull in new tweets
   setInterval(function() {
