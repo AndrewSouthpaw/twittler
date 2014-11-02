@@ -113,9 +113,12 @@ var updateStream = function(isNewDisplay) {
 
   // Format and display each new tweet
   _.each(newTweets, function(tweet) {
-    var $twittle = formatTwittle(tweet);
-    $twittle.prependTo($('#twittle-stream'));
-    lastTweet = tweet;
+    // If on home stream, only display Twits following
+    if (displayedStream === streams.home && twitListFollowing.indexOf(tweet.user) > -1) {
+      var $twittle = formatTwittle(tweet);
+      $twittle.prependTo($('#twittle-stream'));
+      lastTweet = tweet;
+    }
   });
 
   // Truncate stream display to MAX_TWITTLES_DISPLAYED
