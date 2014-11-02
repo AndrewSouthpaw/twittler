@@ -25,34 +25,50 @@ var visitor = "me";   // dummy variable for name of user
 streams.users[visitor] = [];
 
 
-/* Function: loadUserTimeline
+/* Function: loadStream
 ===============================================================================
 Loads a user's timeline into the Twittle stream.
 */
 
-var loadUserTimeline = function() {
-  var username = $(this).text().slice(1);
+var loadStream = function(stream, username) {
+  
+  // Throttle to elegantly handle multiple concurrent calls to loadStream
+  var throttled = _.throttle(function() {
+      console.log('throttled');
+      var isSameStream = displayedStream === stream;
+  
+      if (isSameStream) { return updateStream(true); };
+  
+      // Disappear the stream to change the stream contents
+      if (!isSameStream) {
+        $('#twittle-stream').fadeOut();
+      }
+  
+      displayedStream = stream;
+      // Update stream contents after disappear animation finishes
+      setTimeout(function() {
+        if (displayedStream === streams.home) {
+          $('#twittle-stream-username').text('Twittle Stream');
+          $('#twittle-stream-home-btn').hide();
+        } else {
+          $('#twittle-stream-username').text(username + "'s Twittle Stream");
+          $('#twittle-stream-home-btn').show();
+        }
+        updateStream(true);
+      }, 400);
+  
+      // Reappear stream
+      if (!isSameStream) {
+        setTimeout(function() {
+          // Reappear the stream
+          $('#twittle-stream').fadeIn();
+        }, 400);
+      }
+      
+    }, 4000, {trailing: false});
 
-  // Disappear the stream to change the stream contents
-  $('#twittle-stream').fadeOut();
+throttled();
 
-  setTimeout(function() {
-    // Update stream contents
-    if (username === "") {
-      displayedStream = streams.home;
-      $('#twittle-stream-username').text('Twittle Stream');
-    } else {
-      displayedStream = streams.users[username];
-      $('#twittle-stream-username').text(username + "'s Twittle Stream");
-      $('#twittle-stream-home-btn').show();
-    }
-    updateStream(true);
-  }, 400);
-
-  setTimeout(function() {
-    // Reappear the stream
-    $('#twittle-stream').fadeIn();
-  }, 400);
 };
 
 
@@ -71,7 +87,11 @@ var formatTwittle = function(tweet) {
             .append($('<div class="timedisplay">').text(moment(tweet.created_at).fromNow()))
             );
 
-  $twittle.find('a').click(loadUserTimeline);
+  // $twittle.find('a').click(loadStream.bind(null, streams.users[tweet.user], 
+  //                          $(this).text().slice(1)));
+  $twittle.find('a').click(function() {
+    loadStream(streams.users[tweet.user], tweet.user);
+  })
   return $twittle;
 };
 
@@ -86,6 +106,7 @@ MAX_TWITTLES_DISPLAYED twittles.
 var updateStream = function(isNewDisplay) {
   // Reset 'last tweet' if displaying a new timeline
   if (isNewDisplay) {
+    console.log('new display');
     lastTweet = undefined;
     $('#twittle-stream').empty();
   };
@@ -116,6 +137,9 @@ $(document).ready(function(){
   displayedStream = streams.home;
   updateStream();
   setInterval(updateStream, 1000);
+  setInterval(function() {
+    loadStream(displayedStream);
+  }, 3000);
 
   // Event listener to create Twittle
   $('#btn-create-twittle').click(function() {
@@ -127,8 +151,8 @@ $(document).ready(function(){
 
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
-    loadUserTimeline();
-    $(this).fadeOut();
+    loadStream(streams.home, "");
+    
   })
 
 });
