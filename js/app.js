@@ -5,7 +5,7 @@ File: app.js
 Provides functionality to run Twittle site.
 
 Created by: Andrew Smith
-Release: 1.1
+Release: 1.2
 Date: 2014-11-02
 */
 
@@ -23,6 +23,9 @@ var lastTweet;  // tracks most recent Twittle displayed in stream
 var displayedStream;  // stream currently being displays
 var visitor = "me";   // dummy variable for name of user
 streams.users[visitor] = [];
+var twitListFollowing = []  // list of Twits followed by user
+var twitList = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"]
+  // dummy holder of all twits
 
 
 /* Function: loadStream
@@ -112,6 +115,10 @@ var updateStream = function(isNewDisplay) {
 
   // Format and display each new tweet
   _.each(newTweets, function(tweet) {
+    // If on home stream, only display Twits following
+    if (displayedStream === streams.home && twitListFollowing.indexOf(tweet.user) === -1) {
+      return;
+    }
     var $twittle = formatTwittle(tweet);
     $twittle.prependTo($('#twittle-stream'));
     lastTweet = tweet;
@@ -123,6 +130,80 @@ var updateStream = function(isNewDisplay) {
 };
 
 
+/* Function: loadUserTwitList
+===============================================================================
+Loads the list of Twits the user is following.
+*/
+
+var loadUserTwitList = function() {
+  $('#panel-twit-list').empty();
+  _.each(twitListFollowing, function(username) {
+    var $html =
+      $('<div class="panel panel-default"></div>')
+        .append($('<div class="panel-body"></div>')
+                  .text(" " + username)
+                  .prepend($('<span class="glyphicon glyphicon-user"></span>'))
+                  .append($('<span class="glyphicon glyphicon-ban-circle btn-stop-following-twit"' + 
+                          'data-username="'+username+'" style="float:right;"' +
+                          '</span>')));
+
+    $html.find('.btn-stop-following-twit').click(function() {
+      var username = $(this).data('username');
+      stopFollowingTwit(username);
+      $(this).parent().parent().remove();
+    });
+    $('#panel-twit-list').prepend($html);
+    
+  })
+};
+
+
+/* Function: stopFollowingTwit
+===============================================================================
+Removes the Twit from the list of Following, and refreshes the stream.
+*/
+
+var stopFollowingTwit = function(username) {
+  var index = twitListFollowing.indexOf(username);
+  if (index > -1) {
+    twitListFollowing.splice(index, 1);
+  }
+  updateStream(true);
+}
+
+
+/* Function: followTwit
+===============================================================================
+Starts following a user-entered Twit, and refreshes the stream.
+*/
+
+var followTwit = function(username) {
+  if (twitList.indexOf(username) === -1) {
+    $('#form-follow-twit')
+      .append($('<p class="text-danger" id="follow-twit-error"></p>')
+              .text('User "' + username + '" does not exist.'));
+    
+    setTimeout(function() {
+      $('#follow-twit-error').remove();
+    }, 4000);
+  } else if (twitListFollowing.indexOf(username) === -1) {
+    twitListFollowing.push(username);
+    loadUserTwitList();
+    updateStream(true);
+  } 
+}
+
+
+/* Function: buttonFollowTwit
+===============================================================================
+Button handler to Follow a new Twit
+*/
+var buttonFollowTwit = function() {
+  var username = $('#form-follow-twit input').val();
+  followTwit(username);
+  $('#form-follow-twit input').val('');
+}
+
 
 /* DOM Ready
 ===============================================================================
@@ -130,6 +211,8 @@ var updateStream = function(isNewDisplay) {
 
 $(document).ready(function(){
   displayedStream = streams.home;
+  twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
+  loadUserTwitList();
   updateStream();
   setInterval(updateStream, 1000);  // pull in new tweets
   setInterval(function() {
@@ -147,7 +230,16 @@ $(document).ready(function(){
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
     loadStream(streams.home, "");
-    
-  })
+  });
+
+  // Event listener for input box to Follow Twit
+  $('#form-follow-twit input').keyup(function(e) {
+    if (e.keyCode === 13) {
+      buttonFollowTwit();
+    }
+  });
+
+  // Event listener for Follow button to Follow Twit
+  $('#form-follow-twit button').click(buttonFollowTwit);
 
 });
