@@ -24,7 +24,7 @@ var displayedStream;  // stream currently being displays
 var visitor = "me";   // dummy variable for name of user
 streams.users[visitor] = [];
 var twitListFollowing = []  // list of Twits followed by user
-var twitList = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"]
+var twitList = [visitor, "shawndrost", "sharksforcheap", "mracus", "douglascalhoun"]
   // dummy holder of all twits
 
 
@@ -116,7 +116,8 @@ var updateStream = function(isNewDisplay) {
   // Format and display each new tweet
   _.each(newTweets, function(tweet) {
     // If on home stream, only display Twits following
-    if (displayedStream === streams.home && twitListFollowing.indexOf(tweet.user) === -1) {
+    if ((displayedStream === streams.home && twitListFollowing.indexOf(tweet.user) === -1) &&
+        tweet.user !== visitor) {
       return;
     }
     var $twittle = formatTwittle(tweet);
