@@ -54,13 +54,14 @@ var TwittlesView = Backbone.View.extend({
 });
 
 var twittles = new Twittles({});
-twittles.reset();
 var twittlesView = new TwittlesView({collection: twittles});
 
 
-var testTwittle = {author:'andrew', text:'hello'};
 
 $('document').ready(function() {
-  twittles.reset(streams.home);
   $('#place').append(twittlesView.el);
+  twittles.reset(streams.home);
+  setInterval(function() {
+    twittles.reset(streams.home);
+  }, 1000)
 })
