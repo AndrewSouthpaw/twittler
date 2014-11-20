@@ -174,30 +174,6 @@ var loadStream = _.throttle(function(stream, username) {
 }, 800);
 
 
-/* Function: formatTwittle
-===============================================================================
-Takes a tweet object, formats it to display in HTML. Returns a formatted
-jQuery Twittle object.
-*/
-var formatTwittle = function(tweet) {
-  var $twittle = 
-    $('<div class="twittle panel panel-default"></div>')
-    .append($('<div class="panel-body"></div>')
-            .append($('<div class="username">')
-                    .append($('<a></a>').text('@' + tweet.user)))
-            .append($('<div class="message">').text(tweet.message))
-            .append($('<div class="timedisplay">').text(moment(tweet.created_at).fromNow()))
-            );
-
-  // $twittle.find('a').click(loadStream.bind(null, streams.users[tweet.user], 
-  //                          $(this).text().slice(1)));
-  $twittle.find('a').click(function() {
-    loadStream(streams.users[tweet.user], tweet.user);
-  })
-  return $twittle;
-};
-
-
 
 /* Function: updateStream
 ===============================================================================
@@ -223,13 +199,14 @@ var updateStream = function(isNewDisplay) {
         tweet.user !== visitor) {
       return;
     }
-    var $twittle = formatTwittle(tweet);
-    $twittle.prependTo($('#twittle-stream'));
+    twittles.add(tweet);
+    // var $twittle = formatTwittle(tweet);
+    // $twittle.prependTo($('#twittle-stream'));
     lastTweet = tweet;
   });
 
-  // Truncate stream display to MAX_TWITTLES_DISPLAYED
-  $('div.twittle').slice(MAX_TWITTLES_DISPLAYED).remove();
+  // // Truncate stream display to MAX_TWITTLES_DISPLAYED
+  // $('div.twittle').slice(MAX_TWITTLES_DISPLAYED).remove();
 
 };
 
@@ -317,9 +294,13 @@ $(document).ready(function(){
   twittles = new Twittles({});
   twittlesView = new TwittlesView({collection: twittles});
   twittles.reset(streams.home);
+  displayedStream = streams.home;
+  twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   $('#twittle-stream').append(twittlesView.el);
+  setInterval(function() {
+    updateStream();
+  }, 1000);
   // displayedStream = streams.home;
-  // twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   // loadUserTwitList();
   // updateStream();
   // setInterval(updateStream, 1000);  // pull in new tweets
