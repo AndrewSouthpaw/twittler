@@ -47,9 +47,10 @@ Provides view for TwittleModel
 */
 
 var TwittleView = Backbone.View.extend({
-  className: 'twittleView',
+  className: 'twittle panel panel-default twittleView',
+  tagName: 'div',
   template: 
-    _.template('<div class="twittle panel panel-default">' +
+    _.template('<div class="panel-body">' +
                '  <div class="username"><a>@<%= model.escape("user") %></a></div>' +
                '  <div class="message"><%= model.escape("message") %></div>' +
                '  <div class="timedisplay">' +
