@@ -297,10 +297,13 @@ $(document).ready(function(){
   displayedStream = streams.home;
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   $('#twittle-stream').append(twittlesView.el);
-  setInterval(function() {
-    updateStream();
-  }, 1000);
-  // displayedStream = streams.home;
+  // setInterval(function() {
+  //   updateStream();
+  // }, 1000);
+
+
+
+
   // loadUserTwitList();
   // updateStream();
   // setInterval(updateStream, 1000);  // pull in new tweets
@@ -308,34 +311,34 @@ $(document).ready(function(){
   //   loadStream(displayedStream);
   // }, 60000);  // reload stream contents to update relative times
 
-  // // Event listener to create Twittle
-  // $('#btn-create-twittle').click(function() {
-  //   var msg = $('#text-create-twittle').val();
-  //   writeTweet(msg);
-  //   $('#text-create-twittle').val('');
-  //   updateStream();
-  // })
+  // Event listener to create Twittle
+  $('#btn-create-twittle').click(function() {
+    var msg = $('#text-create-twittle').val();
+    writeTweet(msg);
+    $('#text-create-twittle').val('');
+    updateStream();
+  })
 
-  // // Event listener for Home button on Twittle Stream
-  // $('#twittle-stream-home-btn').click(function() {
-  //   loadStream(streams.home, "");
-  // });
+  // Event listener for Home button on Twittle Stream
+  $('#twittle-stream-home-btn').click(function() {
+    loadStream(streams.home, "");
+  });
 
-  // // Event listener for input box to Follow Twit
-  // $('#form-follow-twit input').keyup(function(e) {
-  //   if (e.keyCode === 13) {
-  //     buttonFollowTwit();
-  //   }
-  // });
+  // Event listener for input box to Follow Twit
+  $('#form-follow-twit input').keyup(function(e) {
+    if (e.keyCode === 13) {
+      buttonFollowTwit();
+    }
+  });
 
-  // // Event listener for Follow button to Follow Twit
-  // $('#form-follow-twit button').click(buttonFollowTwit);
+  // Event listener for Follow button to Follow Twit
+  $('#form-follow-twit button').click(buttonFollowTwit);
 
-  // // Listener for Twittle display limit
-  // $('#select-twittle-display-limit').change(function() {
-  //   MAX_TWITTLES_DISPLAYED = $(this).val();
-  //   updateStream(true);
-  // })
+  // Listener for Twittle display limit
+  $('#select-twittle-display-limit').change(function() {
+    MAX_TWITTLES_DISPLAYED = $(this).val();
+    updateStream(true);
+  })
 
 
 });
