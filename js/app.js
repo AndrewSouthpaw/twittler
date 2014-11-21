@@ -13,7 +13,7 @@ Date: 2014-11-02
 /* Constants
 ===============================================================================
 */
-var MAX_TWITTLES_DISPLAYED = 25;
+var MAX_TWITTLES_DISPLAYED = 5;
 
 /*
 Global variables
@@ -23,8 +23,8 @@ var lastTweet;  // tracks most recent Twittle displayed in stream
 var displayedStream;  // stream currently being displays
 var visitor = "me";   // dummy variable for name of user
 streams.users[visitor] = [];
-var twitListFollowing = []  // list of Twits followed by user
-var twitList = [visitor, "shawndrost", "sharksforcheap", "mracus", "douglascalhoun"]
+var twitListFollowing = [];  // list of Twits followed by user
+var twitList = [visitor, "shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   // dummy holder of all twits
 var twittles;
 var twittlesView;
@@ -92,6 +92,17 @@ var Twittles = Backbone.Collection.extend({
 
   hideModel: function(model) {
     model.trigger('hide');
+  },
+
+  loadStream: function(stream) {
+    stream.forEach(this.addTwittle, this);
+  },
+
+  addTwittle: function(twittle) {
+    this.add(twittle);
+    if (this.length > MAX_TWITTLES_DISPLAYED) {
+      this.remove(this.at(0));
+    }
   }
 });
 
@@ -200,7 +211,7 @@ var updateStream = function(isNewDisplay) {
         tweet.user !== visitor) {
       return;
     }
-    twittles.add(tweet);
+    twittles.addTwittle(tweet);
     // var $twittle = formatTwittle(tweet);
     // $twittle.prependTo($('#twittle-stream'));
     lastTweet = tweet;
@@ -294,7 +305,8 @@ var buttonFollowTwit = function() {
 $(document).ready(function(){
   twittles = new Twittles({});
   twittlesView = new TwittlesView({collection: twittles});
-  twittles.reset(streams.home);
+  // twittles.reset(streams.home);
+  twittles.loadStream(streams.home);
   displayedStream = streams.home;
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   $('#twittle-stream').append(twittlesView.el);
