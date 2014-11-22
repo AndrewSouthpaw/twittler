@@ -28,6 +28,14 @@ var twitList = [visitor, "shawndrost", "sharksforcheap", "mracus", "douglascalho
   // dummy holder of all twits
 var twittles;
 var twittlesView;
+var twitsFollowing;
+var twitsFollowingView;
+
+
+
+/******************************************************************************
+Twittle Backbone
+******************************************************************************/
 
 
 
@@ -95,6 +103,7 @@ var Twittles = Backbone.Collection.extend({
   },
 
   loadStream: function(stream) {
+    this.reset([]);
     stream.forEach(this.addTwittle, this);
   },
 
@@ -122,6 +131,7 @@ var TwittlesView = Backbone.View.extend({
   render: function() {
     this.$el.empty();
     this.collection.forEach(this.addOne, this);
+    return this;
   },
 
   addOne: function(model) {
@@ -136,6 +146,80 @@ var TwittlesView = Backbone.View.extend({
 
 
 
+
+
+
+/******************************************************************************
+TwitsFollowing Backbone
+******************************************************************************/
+
+var TwitModel = Backbone.Model.extend({});
+
+var TwitFollowingView = Backbone.View.extend({
+  tagName: 'div',
+  className: 'panel panel-default',
+  template:
+    _.template('<div class="panel-body">' +
+               '  <span class="glyphicon glyphicon-user"></span>' +
+               '  <%= model.escape("username") %>' +
+               '  <span class="glyphicon glyphicon-ban-circle' + 
+               '   btn-stop-following-twit"' +
+               '   style="float:right;"></span>' +
+               '</div>'),
+  events: {
+    "click span.glyphicon-ban-circle": function() {
+      stopFollowingTwit(this.model);
+      this.model.trigger('hide');
+      this.model.destroy();
+    }, 
+  }, 
+
+  initialize: function(){
+    this.model.on('hide', this.remove, this);
+  },
+
+  render: function(){
+    this.$el.html(this.template({model: this.model}));
+    return this;
+  },
+
+  remove: function(){
+    this.$el.remove();
+  },
+});
+
+
+var TwitsFollowing = Backbone.Collection.extend({
+  model: TwitModel,
+  loadUserTwitList: function(){
+    this.reset([]);
+    twitListFollowing.forEach(function(username) {
+      this.add({username: username});
+    }, this);
+  },
+});
+
+
+
+var TwitsFollowingView = Backbone.View.extend({
+  className: 'twitsFollowingView',
+  initialize: function(){
+    this.collection.on('change', this.render, this);
+    this.collection.on('add', function() {
+      this.render();
+      updateStream(true);
+    }, this);
+  },
+
+  render: function(){
+    this.$el.empty();
+    this.collection.forEach(function(model) {
+      var view = new TwitFollowingView({model: model});
+      this.$el.append(view.render().el);
+    }, this);
+    return this;
+  },
+});
 
 
 
@@ -189,15 +273,13 @@ var loadStream = _.throttle(function(stream, username) {
 
 /* Function: updateStream
 ===============================================================================
-Checks for new tweets in the displayed stream. If present, formats these for
-display on the stream, and displays them. Only displays most recent 
-MAX_TWITTLES_DISPLAYED twittles.
+Checks for new tweets in the displayed stream and displays them.
 */
 var updateStream = function(isNewDisplay) {
   // Reset 'last tweet' if displaying a new timeline
   if (isNewDisplay) {
     lastTweet = undefined;
-    $('#twittle-stream').empty();
+    twittles.reset([]);
   };
 
   // Collect new tweets based on last displayed tweet
@@ -207,48 +289,19 @@ var updateStream = function(isNewDisplay) {
   // Format and display each new tweet
   _.each(newTweets, function(tweet) {
     // If on home stream, only display Twits following
-    if ((displayedStream === streams.home && twitListFollowing.indexOf(tweet.user) === -1) &&
-        tweet.user !== visitor) {
+    if ((displayedStream === streams.home && 
+        !_.contains(twitsFollowing.pluck('username'), tweet.user) &&
+        tweet.user !== visitor)) {
       return;
     }
+
     twittles.addTwittle(tweet);
-    // var $twittle = formatTwittle(tweet);
-    // $twittle.prependTo($('#twittle-stream'));
     lastTweet = tweet;
   });
 
-  // // Truncate stream display to MAX_TWITTLES_DISPLAYED
-  // $('div.twittle').slice(MAX_TWITTLES_DISPLAYED).remove();
-
 };
 
 
-/* Function: loadUserTwitList
-===============================================================================
-Loads the list of Twits the user is following.
-*/
-
-var loadUserTwitList = function() {
-  $('#panel-twit-list').empty();
-  _.each(twitListFollowing, function(username) {
-    var $html =
-      $('<div class="panel panel-default"></div>')
-        .append($('<div class="panel-body"></div>')
-                  .text(" " + username)
-                  .prepend($('<span class="glyphicon glyphicon-user"></span>'))
-                  .append($('<span class="glyphicon glyphicon-ban-circle btn-stop-following-twit"' + 
-                          'data-username="'+username+'" style="float:right;"' +
-                          '</span>')));
-
-    $html.find('.btn-stop-following-twit').click(function() {
-      var username = $(this).data('username');
-      stopFollowingTwit(username);
-      $(this).parent().parent().remove();
-    });
-    $('#panel-twit-list').prepend($html);
-    
-  })
-};
 
 
 /* Function: stopFollowingTwit
@@ -256,12 +309,9 @@ var loadUserTwitList = function() {
 Removes the Twit from the list of Following, and refreshes the stream.
 */
 
-var stopFollowingTwit = function(username) {
-  var index = twitListFollowing.indexOf(username);
-  if (index > -1) {
-    twitListFollowing.splice(index, 1);
-  }
-  updateStream(true);
+var stopFollowingTwit = function(user) {
+  twitsFollowing.remove(user);
+  updateStream(true);  
 }
 
 
@@ -303,22 +353,28 @@ var buttonFollowTwit = function() {
 */
 
 $(document).ready(function(){
+  /* Set up Twittles stream */
   twittles = new Twittles({});
   twittlesView = new TwittlesView({collection: twittles});
-  // twittles.reset(streams.home);
   twittles.loadStream(streams.home);
   displayedStream = streams.home;
+  $('#twittle-stream').append(twittlesView.render().el);
+
+
+  
+  /* Load Twits Following */
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
-  $('#twittle-stream').append(twittlesView.el);
+  twitsFollowing = new TwitsFollowing({});
+  twitsFollowing.loadUserTwitList();
+  twitsFollowingView = new TwitsFollowingView({collection: twitsFollowing});
+  $('#panel-twit-list').prepend(twitsFollowingView.render().el);
+
+  /* Regularly update stream */
   // setInterval(function() {
   //   updateStream();
   // }, 1000);
 
 
-
-
-  // loadUserTwitList();
-  // updateStream();
   // setInterval(updateStream, 1000);  // pull in new tweets
   // setInterval(function() {
   //   loadStream(displayedStream);
