@@ -13,7 +13,7 @@ Date: 2014-11-02
 /* Constants
 ===============================================================================
 */
-var MAX_TWITTLES_DISPLAYED = 5;
+var MAX_TWITTLES_DISPLAYED = 10;
 
 /*
 Global variables
@@ -62,13 +62,14 @@ var TwittleView = Backbone.View.extend({
                '  <div class="username"><a>@<%= model.escape("user") %></a></div>' +
                '  <div class="message"><%= model.escape("message") %></div>' +
                '  <div class="timedisplay">' +
-               '    <% print(moment(model.created_at).fromNow()) %>' +
+               '    <% print(moment(model.get("created_at")).fromNow()) %>' +
                '  </div>' +
                '</div>'), 
 
   events: {
     'click a': function() {
-      loadStream(streams.users[tweet.user], tweet.user);
+      var username = this.model.get('user');
+      loadStream(streams.users[username], username);
     }
   },
 
@@ -128,6 +129,7 @@ var TwittlesView = Backbone.View.extend({
     this.collection.on('add', this.addOne, this);
     this.collection.on('reset', this.render, this);
   },
+
   render: function() {
     this.$el.empty();
     this.collection.forEach(this.addOne, this);
@@ -233,7 +235,6 @@ Loads a user's timeline into the Twittle stream.
 */
 
 var loadStream = _.throttle(function(stream, username) {
-  
   // Throttle to elegantly handle multiple concurrent calls to loadStream
   var isSameStream = displayedStream === stream;
 
@@ -321,18 +322,21 @@ Starts following a user-entered Twit, and refreshes the stream.
 */
 
 var followTwit = function(username) {
-  if (twitList.indexOf(username) === -1) {
+  // Display error if user does not exist
+  if (!_.contains(twitList, username)) {
     $('#form-follow-twit')
       .append($('<p class="text-danger" id="follow-twit-error"></p>')
               .text('User "' + username + '" does not exist.'));
     
+    // Remove error after set duration
     setTimeout(function() {
       $('#follow-twit-error').remove();
     }, 4000);
-  } else if (twitListFollowing.indexOf(username) === -1) {
-    twitListFollowing.push(username);
-    loadUserTwitList();
-    updateStream(true);
+
+  // Add user
+  } else if (!_.contains(twitsFollowing.pluck('username'), username)) {
+    var twit = new TwitModel({username: username});
+    twitsFollowing.add(twit);
   } 
 }
 
@@ -362,7 +366,7 @@ $(document).ready(function(){
 
 
   
-  /* Load Twits Following */
+  /* Load initial staging of twits following */
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   twitsFollowing = new TwitsFollowing({});
   twitsFollowing.loadUserTwitList();
@@ -370,15 +374,12 @@ $(document).ready(function(){
   $('#panel-twit-list').prepend(twitsFollowingView.render().el);
 
   /* Regularly update stream */
-  // setInterval(function() {
-  //   updateStream();
-  // }, 1000);
-
-
-  // setInterval(updateStream, 1000);  // pull in new tweets
-  // setInterval(function() {
-  //   loadStream(displayedStream);
-  // }, 60000);  // reload stream contents to update relative times
+  setInterval(function() {
+    updateStream();
+  }, 1000);
+  setInterval(function() {
+    loadStream(displayedStream);
+  }, 60000);  // reload stream contents to update relative times
 
   // Event listener to create Twittle
   $('#btn-create-twittle').click(function() {
