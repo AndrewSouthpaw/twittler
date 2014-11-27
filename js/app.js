@@ -128,7 +128,12 @@ var TwittlesView = Backbone.View.extend({
     this.collection.on('change', this.render, this);
     this.collection.on('add', this.addOne, this);
     this.collection.on('reset', this.render, this);
+    this.collection.loadStream(streams.home);
+    displayedStream = streams.home;
+    $('#twittle-stream').append(this.render().el);
   },
+
+
 
   render: function() {
     this.$el.empty();
@@ -360,10 +365,6 @@ $(document).ready(function(){
   /* Set up Twittles stream */
   twittles = new Twittles({});
   twittlesView = new TwittlesView({collection: twittles});
-  twittles.loadStream(streams.home);
-  displayedStream = streams.home;
-  $('#twittle-stream').append(twittlesView.render().el);
-
 
   
   /* Load initial staging of twits following */
