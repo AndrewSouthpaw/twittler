@@ -69,7 +69,7 @@ var TwittleView = Backbone.View.extend({
   events: {
     'click a': function() {
       var username = this.model.get('user');
-      loadStream(streams.users[username], username);
+      twittles.loadStream(streams.users[username], username);
     }
   },
 
@@ -103,11 +103,6 @@ var Twittles = Backbone.Collection.extend({
     model.trigger('hide');
   },
 
-  loadStream: function(stream) {
-    this.reset([]);
-    stream.forEach(this.addTwittle, this);
-  },
-
   addTwittle: function(twittle) {
     this.add(twittle);
     if (this.length > MAX_TWITTLES_DISPLAYED) {
@@ -116,6 +111,7 @@ var Twittles = Backbone.Collection.extend({
   },
 
   updateStream: function(isNewDisplay) {
+    // Update current stream with latest twittles
     // Reset 'last tweet' if displaying a new timeline
     if (isNewDisplay) {
       lastTweet = undefined;
@@ -124,7 +120,10 @@ var Twittles = Backbone.Collection.extend({
 
     // Collect new tweets based on last displayed tweet
     var newTweets = 
-      displayedStream.slice(_.indexOf(displayedStream, lastTweet) + 1);
+      displayedStream.slice(isNewDisplay 
+                            ? -MAX_TWITTLES_DISPLAYED
+                            : _.indexOf(displayedStream, lastTweet) + 1
+                            );
 
     // Format and display each new tweet
     _.each(newTweets, function(tweet) {
@@ -139,7 +138,41 @@ var Twittles = Backbone.Collection.extend({
       lastTweet = tweet;
     }, this);
 
-  }
+  },
+
+  loadStream: _.throttle(function(stream, username) {
+    // Completely reloads a stream
+    // Throttle to elegantly handle multiple concurrent calls to loadStream
+    var isSameStream = displayedStream === stream;
+
+    if (isSameStream) { return this.updateStream(true); };
+
+    // Disappear the stream to change the stream contents
+    if (!isSameStream) {
+      $('#twittle-stream').fadeOut();
+    }
+
+    displayedStream = stream;
+    // Update stream contents after disappear animation finishes
+    setTimeout(function() {
+      if (displayedStream === streams.home) {
+        $('#twittle-stream-username').text('Twittle Stream');
+        $('#twittle-stream-home-btn').hide();
+      } else {
+        $('#twittle-stream-username').text(username + "'s Twittle Stream");
+        $('#twittle-stream-home-btn').show();
+      }
+      twittles.updateStream(true);
+    }, 400);
+
+    // Reappear stream
+    if (!isSameStream) {
+      setTimeout(function() {
+        // Reappear the stream
+        $('#twittle-stream').fadeIn();
+      }, 400);
+    }
+  }, 800)
 
 
 });
@@ -261,53 +294,6 @@ var TwitsFollowingView = Backbone.View.extend({
 
 
 
-
-
-
-/* Function: loadStream
-===============================================================================
-Loads a user's timeline into the Twittle stream.
-*/
-
-var loadStream = _.throttle(function(stream, username) {
-  // Throttle to elegantly handle multiple concurrent calls to loadStream
-  var isSameStream = displayedStream === stream;
-
-  if (isSameStream) { return twittles.updateStream(true); };
-
-  // Disappear the stream to change the stream contents
-  if (!isSameStream) {
-    $('#twittle-stream').fadeOut();
-  }
-
-  displayedStream = stream;
-  // Update stream contents after disappear animation finishes
-  setTimeout(function() {
-    if (displayedStream === streams.home) {
-      $('#twittle-stream-username').text('Twittle Stream');
-      $('#twittle-stream-home-btn').hide();
-    } else {
-      $('#twittle-stream-username').text(username + "'s Twittle Stream");
-      $('#twittle-stream-home-btn').show();
-    }
-    twittles.updateStream(true);
-  }, 400);
-
-  // Reappear stream
-  if (!isSameStream) {
-    setTimeout(function() {
-      // Reappear the stream
-      $('#twittle-stream').fadeIn();
-    }, 400);
-  }
-      
-
-
-}, 800);
-
-
-
-
 /* Function: stopFollowingTwit
 ===============================================================================
 Removes the Twit from the list of Following, and refreshes the stream.
@@ -375,7 +361,7 @@ $(document).ready(function(){
     twittles.updateStream();
   }, 1000);
   setInterval(function() {
-    loadStream(displayedStream);
+    twittles.loadStream(displayedStream);
   }, 60000);  // reload stream contents to update relative times
 
   // Event listener to create Twittle
@@ -388,7 +374,7 @@ $(document).ready(function(){
 
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
-    loadStream(streams.home, "");
+    twittles.loadStream(streams.home, "");
   });
 
   // Event listener for input box to Follow Twit
