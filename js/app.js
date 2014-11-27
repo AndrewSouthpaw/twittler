@@ -309,42 +309,80 @@ App.Views.TwitsFollowing = Backbone.View.extend({
 });
 
 
-
-
-/* Function: followTwit
+/* Form: FollowTwitForm
 ===============================================================================
-Starts following a user-entered Twit, and refreshes the stream.
-*/
+Starts following a user-entered Twit, and refreshes the stream. */
 
-var followTwit = function(username) {
-  // Display error if user does not exist
-  if (!_.contains(twitList, username)) {
-    $('#form-follow-twit')
-      .append($('<p class="text-danger" id="follow-twit-error"></p>')
-              .text('User "' + username + '" does not exist.'));
+var FollowTwitForm = Backbone.View.extend({
+  template: _.template(
+    '<form class="followTwitForm">' +
+    '  <input type="text" placeholder="Follow A Twit" class="form-control" />' +
+    '  <button class="btn btn-info" id="btn-follow-twit">Follow</button>' +
+    '</form>'
+  ),
+
+  events: {
+    submit: 'followTwit'
+  },
+
+  initialize: function(){
     
-    // Remove error after set duration
-    setTimeout(function() {
-      $('#follow-twit-error').remove();
-    }, 4000);
+  },
 
-  // Add user
-  } else if (!_.contains(twitsFollowing.pluck('username'), username)) {
-    var twit = new App.Models.Twit({username: username});
-    twitsFollowing.add(twit);
-  } 
-}
+  render: function(){
+    this.$el.html(this.template());
+    return this;
+  },
+
+  followTwit: function(e) {
+    e.preventDefault();
+    var username = this.$('input').val();
+    // Display error if user does not exist
+    if (!_.contains(twitList, username)) {
+      this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
+              .text('User "' + username + '" does not exist.'));
+      
+      // Remove error after set duration
+      setTimeout(function() {
+        $('#follow-twit-error').remove();
+      }, 4000);
+
+    // Display error if user already added
+    } else if (_.contains(this.collection.pluck('username'), username)) {
+      this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
+              .text('Already following user "' + username + '".'));
+      
+      // Remove error after set duration
+      setTimeout(function() {
+        $('#follow-twit-error').remove();
+      }, 4000);
+
+      this.$('input').val('');
+
+    // Otherwise add user
+    } else if (!_.contains(this.collection.pluck('username'), username)) {
+      var twit = new TwitModel({username: username});
+      this.collection.add(twit);
+      this.$('input').val('');
+    } 
+  }
+
+});
 
 
-/* Function: buttonFollowTwit
+
+
+/* Function: stopFollowingTwit
 ===============================================================================
-Button handler to Follow a new Twit
+Removes the Twit from the list of Following, and refreshes the stream.
 */
-var buttonFollowTwit = function() {
-  var username = $('#form-follow-twit input').val();
-  followTwit(username);
-  $('#form-follow-twit input').val('');
+
+var stopFollowingTwit = function(user) {
+  twitsFollowing.remove(user);
+  twittles.updateStream(true);  
 }
+
+
 
 
 /******************************************************************************
@@ -368,6 +406,12 @@ $(document).ready(function(){
   twitsFollowingView = new App.Views.TwitsFollowing({collection: twitsFollowing});
   twittlesView = new App.Views.Twittles({collection: twittles});
 
+  /* Create forms */
+  // Follow twit form
+  var followTwitForm = new FollowTwitForm({collection: twitsFollowing});
+  $('#form-follow-twit').append(followTwitForm.render().el);
+
+
   // Event listener to create Twittle
   $('#btn-create-twittle').click(function() {
     var msg = $('#text-create-twittle').val();
@@ -380,16 +424,6 @@ $(document).ready(function(){
   $('#twittle-stream-home-btn').click(function() {
     twittles.loadStream(streams.home, "");
   });
-
-  // Event listener for input box to Follow Twit
-  $('#form-follow-twit input').keyup(function(e) {
-    if (e.keyCode === 13) {
-      buttonFollowTwit();
-    }
-  });
-
-  // Event listener for Follow button to Follow Twit
-  $('#form-follow-twit button').click(buttonFollowTwit);
 
   // Listener for Twittle display limit
   $('#select-twittle-display-limit').change(function() {
