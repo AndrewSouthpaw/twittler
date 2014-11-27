@@ -113,7 +113,35 @@ var Twittles = Backbone.Collection.extend({
     if (this.length > MAX_TWITTLES_DISPLAYED) {
       this.remove(this.at(0));
     }
+  },
+
+  updateStream: function(isNewDisplay) {
+    // Reset 'last tweet' if displaying a new timeline
+    if (isNewDisplay) {
+      lastTweet = undefined;
+      this.reset([]);
+    };
+
+    // Collect new tweets based on last displayed tweet
+    var newTweets = 
+      displayedStream.slice(_.indexOf(displayedStream, lastTweet) + 1);
+
+    // Format and display each new tweet
+    _.each(newTweets, function(tweet) {
+      // If on home stream, only display Twits following
+      if ((displayedStream === streams.home && 
+          !_.contains(twitsFollowing.pluck('username'), tweet.user) &&
+          tweet.user !== visitor)) {
+        return;
+      }
+
+      this.addTwittle(tweet);
+      lastTweet = tweet;
+    }, this);
+
   }
+
+
 });
 
 
@@ -214,7 +242,7 @@ var TwitsFollowingView = Backbone.View.extend({
     this.collection.on('change', this.render, this);
     this.collection.on('add', function() {
       this.render();
-      updateStream(true);
+      twittles.updateStream(true);
     }, this);
     this.collection.loadUserTwitList();
     $('#panel-twit-list').prepend(this.render().el);
@@ -245,7 +273,7 @@ var loadStream = _.throttle(function(stream, username) {
   // Throttle to elegantly handle multiple concurrent calls to loadStream
   var isSameStream = displayedStream === stream;
 
-  if (isSameStream) { return updateStream(true); };
+  if (isSameStream) { return twittles.updateStream(true); };
 
   // Disappear the stream to change the stream contents
   if (!isSameStream) {
@@ -262,7 +290,7 @@ var loadStream = _.throttle(function(stream, username) {
       $('#twittle-stream-username').text(username + "'s Twittle Stream");
       $('#twittle-stream-home-btn').show();
     }
-    updateStream(true);
+    twittles.updateStream(true);
   }, 400);
 
   // Reappear stream
@@ -279,38 +307,6 @@ var loadStream = _.throttle(function(stream, username) {
 
 
 
-/* Function: updateStream
-===============================================================================
-Checks for new tweets in the displayed stream and displays them.
-*/
-var updateStream = function(isNewDisplay) {
-  // Reset 'last tweet' if displaying a new timeline
-  if (isNewDisplay) {
-    lastTweet = undefined;
-    twittles.reset([]);
-  };
-
-  // Collect new tweets based on last displayed tweet
-  var newTweets = 
-    displayedStream.slice(_.indexOf(displayedStream, lastTweet) + 1);
-
-  // Format and display each new tweet
-  _.each(newTweets, function(tweet) {
-    // If on home stream, only display Twits following
-    if ((displayedStream === streams.home && 
-        !_.contains(twitsFollowing.pluck('username'), tweet.user) &&
-        tweet.user !== visitor)) {
-      return;
-    }
-
-    twittles.addTwittle(tweet);
-    lastTweet = tweet;
-  });
-
-};
-
-
-
 
 /* Function: stopFollowingTwit
 ===============================================================================
@@ -319,7 +315,7 @@ Removes the Twit from the list of Following, and refreshes the stream.
 
 var stopFollowingTwit = function(user) {
   twitsFollowing.remove(user);
-  updateStream(true);  
+  twittles.updateStream(true);  
 }
 
 
@@ -376,7 +372,7 @@ $(document).ready(function(){
 
   /* Regularly update stream */
   setInterval(function() {
-    updateStream();
+    twittles.updateStream();
   }, 1000);
   setInterval(function() {
     loadStream(displayedStream);
@@ -387,7 +383,7 @@ $(document).ready(function(){
     var msg = $('#text-create-twittle').val();
     writeTweet(msg);
     $('#text-create-twittle').val('');
-    updateStream();
+    twittles.updateStream();
   })
 
   // Event listener for Home button on Twittle Stream
@@ -408,7 +404,7 @@ $(document).ready(function(){
   // Listener for Twittle display limit
   $('#select-twittle-display-limit').change(function() {
     MAX_TWITTLES_DISPLAYED = $(this).val();
-    updateStream(true);
+    twittles.updateStream(true);
   })
 
 
