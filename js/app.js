@@ -33,7 +33,8 @@ var twitsFollowingView;
 var App = {    // contains Backbone info
   Models: {},
   Views: {},
-  Collections: {}
+  Collections: {},
+  Forms: {}
 };  
 
 
@@ -313,7 +314,7 @@ App.Views.TwitsFollowing = Backbone.View.extend({
 ===============================================================================
 Starts following a user-entered Twit, and refreshes the stream. */
 
-var FollowTwitForm = Backbone.View.extend({
+App.Forms.FollowTwitForm = Backbone.View.extend({
   template: _.template(
     '<form class="followTwitForm">' +
     '  <input type="text" placeholder="Follow A Twit" class="form-control" />' +
@@ -390,7 +391,7 @@ $(document).ready(function(){
 
   /* Create forms */
   // Follow twit form
-  var followTwitForm = new FollowTwitForm({collection: twitsFollowing});
+  var followTwitForm = new App.Forms.FollowTwitForm({collection: twitsFollowing});
   $('#form-follow-twit').append(followTwitForm.render().el);
 
 
