@@ -351,6 +351,8 @@ var buttonFollowTwit = function() {
 DOM Ready
 ******************************************************************************/
 
+
+
 $(document).ready(function(){
 
   displayedStream = streams.home;
