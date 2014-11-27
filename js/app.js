@@ -222,10 +222,16 @@ var TwittlesView = Backbone.View.extend({
 TwitsFollowing Backbone
 ******************************************************************************/
 
+/* Model: TwitModel
+===============================================================================
+To track users following */
 var TwitModel = Backbone.Model.extend({
 
 });
 
+/* View: TwitFollowingView
+===============================================================================
+View for following a twit */
 var TwitFollowingView = Backbone.View.extend({
   tagName: 'div',
   className: 'panel panel-default',
@@ -265,7 +271,9 @@ var TwitFollowingView = Backbone.View.extend({
   }
 });
 
-
+/* Collection: TwitsFollowing
+===============================================================================
+Contains all the twits being followed */
 var TwitsFollowing = Backbone.Collection.extend({
   model: TwitModel,
   loadUserTwitList: function(){
@@ -277,7 +285,9 @@ var TwitsFollowing = Backbone.Collection.extend({
 });
 
 
-
+/* Collection View: TwitsFollowingView
+===============================================================================
+Collection view for twits being followed */
 var TwitsFollowingView = Backbone.View.extend({
   className: 'twitsFollowingView',
   initialize: function(){
@@ -339,9 +349,9 @@ var buttonFollowTwit = function() {
 }
 
 
-/* DOM Ready
-===============================================================================
-*/
+/******************************************************************************
+DOM Ready
+******************************************************************************/
 
 $(document).ready(function(){
 
