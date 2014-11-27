@@ -184,6 +184,15 @@ var TwittlesView = Backbone.View.extend({
     this.collection.on('reset', this.render, this);
     this.collection.loadStream(streams.home);
     $('#twittle-stream').append(this.render().el);
+
+    /* Regularly check for new twittles */
+    setInterval(function() {
+      twittles.updateStream();
+    }, 1000);
+    /* Reload stream contents to update relative times */
+    setInterval(function() {
+      twittles.loadStream(displayedStream);
+    }, 60000); 
   },
 
 
@@ -351,15 +360,6 @@ $(document).ready(function(){
   /* Create views */
   twitsFollowingView = new TwitsFollowingView({collection: twitsFollowing});
   twittlesView = new TwittlesView({collection: twittles});
-
-
-  /* Regularly update stream */
-  setInterval(function() {
-    twittles.updateStream();
-  }, 1000);
-  setInterval(function() {
-    twittles.loadStream(displayedStream);
-  }, 60000);  // reload stream contents to update relative times
 
   // Event listener to create Twittle
   $('#btn-create-twittle').click(function() {
