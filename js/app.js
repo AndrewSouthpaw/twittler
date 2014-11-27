@@ -5,8 +5,8 @@ File: app.js
 Provides functionality to run Twittle site.
 
 Created by: Andrew Smith
-Release: 2.0
-Date: 2014-11-23
+Release: 2.1
+Date: 2014-11-27
 */
 
 
@@ -30,7 +30,12 @@ var twittles;
 var twittlesView;
 var twitsFollowing;
 var twitsFollowingView;
-
+var App = {    // contains Backbone info
+  Models: {},
+  Views: {},
+  Collections: {},
+  Forms: {}
+};  
 
 
 /******************************************************************************
@@ -39,22 +44,18 @@ Twittle Backbone
 
 
 
-/*
-TwittleModel
+/* Model: Twittle
 ===============================================================================
-Contains data for a Twittle
-*/
-var TwittleModel = Backbone.Model.extend({
+Contains data for a Twittle */
+App.Models.Twittle = Backbone.Model.extend({
 });
 
 
-/*
-TwittleView
+/* View: Twittle
 ===============================================================================
-Provides view for TwittleModel
-*/
+Provides view for Twittle */
 
-var TwittleView = Backbone.View.extend({
+App.Views.Twittle = Backbone.View.extend({
   className: 'twittle panel panel-default twittleView',
   tagName: 'div',
   template: 
@@ -69,7 +70,7 @@ var TwittleView = Backbone.View.extend({
   events: {
     'click a': function() {
       var username = this.model.get('user');
-      loadStream(streams.users[username], username);
+      twittles.loadStream(streams.users[username], username);
     }
   },
 
@@ -88,13 +89,12 @@ var TwittleView = Backbone.View.extend({
 });
 
 
-/* Twittles
+/* Collection: Twittles
 ===============================================================================
-Collection of TwittleModels
-*/
+Collection of Twittles */
 
-var Twittles = Backbone.Collection.extend({
-  model: TwittleModel,
+App.Collections.Twittles = Backbone.Collection.extend({
+  model: App.Models.Twittle,
   initialize: function() {
     this.on('remove', this.hideModel, this);
   },
@@ -103,32 +103,98 @@ var Twittles = Backbone.Collection.extend({
     model.trigger('hide');
   },
 
-  loadStream: function(stream) {
-    this.reset([]);
-    stream.forEach(this.addTwittle, this);
-  },
-
   addTwittle: function(twittle) {
     this.add(twittle);
     if (this.length > MAX_TWITTLES_DISPLAYED) {
       this.remove(this.at(0));
     }
-  }
+  },
+
+  updateStream: function(isNewDisplay) {
+    // Update current stream with latest twittles
+    // Reset 'last tweet' if displaying a new timeline
+    if (isNewDisplay) {
+      lastTweet = undefined;
+      this.reset([]);
+    };
+
+    // Collect new tweets based on last displayed tweet
+    var newTweets = 
+      displayedStream.slice(isNewDisplay 
+                            ? -MAX_TWITTLES_DISPLAYED
+                            : _.indexOf(displayedStream, lastTweet) + 1
+                            );
+
+    // Format and display each new tweet
+    _.each(newTweets, function(tweet) {
+      // If on home stream, only display Twits following
+      if ((displayedStream === streams.home && 
+          !_.contains(twitsFollowing.pluck('username'), tweet.user) &&
+          tweet.user !== visitor)) {
+        return;
+      }
+
+      this.addTwittle(tweet);
+      lastTweet = tweet;
+    }, this);
+
+  },
+
+  loadStream: _.throttle(function(stream, username) {
+    // Completely reloads a stream
+    if (displayedStream === stream) return this.updateStream(true);
+
+    // Disappear the stream to change the stream contents
+    $('#twittle-stream').fadeOut();
+
+    displayedStream = stream;
+    // Update stream contents after disappear animation finishes
+    setTimeout(function() {
+      if (displayedStream === streams.home) {
+        $('#twittle-stream-username').text('Twittle Stream');
+        $('#twittle-stream-home-btn').hide();
+      } else {
+        $('#twittle-stream-username').text(username + "'s Twittle Stream");
+        $('#twittle-stream-home-btn').show();
+      }
+      twittles.updateStream(true);
+    }, 400);
+
+    // Reappear stream
+    setTimeout(function() {
+      // Reappear the stream
+      $('#twittle-stream').fadeIn();
+    }, 400);
+  }, 800)
+
+
 });
 
 
-/* TwittlesView
+/* View: Twittles
 ===============================================================================
-CollectionView for Twittles
-*/
+CollectionView for Twittles */
 
-var TwittlesView = Backbone.View.extend({
+App.Views.Twittles = Backbone.View.extend({
   className: 'twittlesView',
   initialize: function() {
     this.collection.on('change', this.render, this);
     this.collection.on('add', this.addOne, this);
     this.collection.on('reset', this.render, this);
+    this.collection.loadStream(streams.home);
+    $('#twittle-stream').append(this.render().el);
+
+    /* Regularly check for new twittles */
+    setInterval(function() {
+      twittles.updateStream();
+    }, 1000);
+    /* Reload stream contents to update relative times */
+    setInterval(function() {
+      twittles.loadStream(displayedStream);
+    }, 60000); 
   },
+
+
 
   render: function() {
     this.$el.empty();
@@ -137,17 +203,45 @@ var TwittlesView = Backbone.View.extend({
   },
 
   addOne: function(model) {
-    var view = new TwittleView({model: model});
+    var view = new App.Views.Twittle({model: model});
     this.$el.prepend(view.render().el);
   }
 });
 
 
 
+/* Form: CreateTwittle
+===============================================================================
+Allows user to write a new Twittle */
 
+App.Forms.CreateTwittle = Backbone.View.extend({
+  template:
+    _.template('<form>' +
+               // '<input type="text" name="message" />' +
+               '<textarea class="form-control" rows="3" id="text-create-twittle"' +
+               '  placeholder="lolsrsly?!"></textarea>' +
+               '<br>' +
+               '<button class="btn btn-info" id="btn-create-twittle">' +
+               '  Twittle!' +
+               '</button></form>'),
 
+  events: {
+    submit: 'create',
+  },
 
+  create: function(e){
+    e.preventDefault();
+    var msg = this.$('textarea').val();
+    writeTweet(msg);
+    this.$('textarea').val('');
+    this.collection.updateStream();
+  },
 
+  render: function(){
+    this.$el.html(this.template());
+    return this;
+  },
+});
 
 
 
@@ -155,9 +249,17 @@ var TwittlesView = Backbone.View.extend({
 TwitsFollowing Backbone
 ******************************************************************************/
 
-var TwitModel = Backbone.Model.extend({});
+/* Model: Twit
+===============================================================================
+To track users following */
+App.Models.Twit = Backbone.Model.extend({
 
-var TwitFollowingView = Backbone.View.extend({
+});
+
+/* View: TwitFollowing
+===============================================================================
+View for following a twit */
+App.Views.TwitFollowing = Backbone.View.extend({
   tagName: 'div',
   className: 'panel panel-default',
   template:
@@ -170,9 +272,7 @@ var TwitFollowingView = Backbone.View.extend({
                '</div>'),
   events: {
     "click span.glyphicon-ban-circle": function() {
-      stopFollowingTwit(this.model);
-      this.model.trigger('hide');
-      this.model.destroy();
+      this.stopFollowingTwit();
     }, 
   }, 
 
@@ -188,11 +288,21 @@ var TwitFollowingView = Backbone.View.extend({
   remove: function(){
     this.$el.remove();
   },
+
+  stopFollowingTwit: function() {
+    // Removes the Twit from the list of Following, and refreshes the stream.
+    this.remove(this);
+    this.model.trigger('hide');
+    this.model.destroy();
+    twittles.updateStream(true);  
+  }
 });
 
-
-var TwitsFollowing = Backbone.Collection.extend({
-  model: TwitModel,
+/* Collection: TwitsFollowing
+===============================================================================
+Contains all the twits being followed */
+App.Collections.TwitsFollowing = Backbone.Collection.extend({
+  model: App.Models.Twit,
   loadUserTwitList: function(){
     this.reset([]);
     twitListFollowing.forEach(function(username) {
@@ -202,21 +312,25 @@ var TwitsFollowing = Backbone.Collection.extend({
 });
 
 
-
-var TwitsFollowingView = Backbone.View.extend({
+/* Collection View: TwitsFollowing
+===============================================================================
+Collection view for twits being followed */
+App.Views.TwitsFollowing = Backbone.View.extend({
   className: 'twitsFollowingView',
   initialize: function(){
     this.collection.on('change', this.render, this);
     this.collection.on('add', function() {
       this.render();
-      updateStream(true);
+      twittles.updateStream(true);
     }, this);
+    this.collection.loadUserTwitList();
+    $('#panel-twit-list').prepend(this.render().el);
   },
 
   render: function(){
     this.$el.empty();
     this.collection.forEach(function(model) {
-      var view = new TwitFollowingView({model: model});
+      var view = new App.Views.TwitFollowing({model: model});
       this.$el.append(view.render().el);
     }, this);
     return this;
@@ -224,190 +338,111 @@ var TwitsFollowingView = Backbone.View.extend({
 });
 
 
-
-
-
-
-
-/* Function: loadStream
+/* Form: FollowTwitForm
 ===============================================================================
-Loads a user's timeline into the Twittle stream.
-*/
+Starts following a user-entered Twit, and refreshes the stream. */
 
-var loadStream = _.throttle(function(stream, username) {
-  // Throttle to elegantly handle multiple concurrent calls to loadStream
-  var isSameStream = displayedStream === stream;
+App.Forms.FollowTwitForm = Backbone.View.extend({
+  template: _.template(
+    '<form class="followTwitForm">' +
+    '  <input type="text" placeholder="Follow A Twit" class="form-control" />' +
+    '  <button class="btn btn-info" id="btn-follow-twit">Follow</button>' +
+    '</form>'
+  ),
 
-  if (isSameStream) { return updateStream(true); };
+  events: {
+    submit: 'followTwit'
+  },
 
-  // Disappear the stream to change the stream contents
-  if (!isSameStream) {
-    $('#twittle-stream').fadeOut();
-  }
+  render: function(){
+    this.$el.html(this.template());
+    return this;
+  },
 
-  displayedStream = stream;
-  // Update stream contents after disappear animation finishes
-  setTimeout(function() {
-    if (displayedStream === streams.home) {
-      $('#twittle-stream-username').text('Twittle Stream');
-      $('#twittle-stream-home-btn').hide();
-    } else {
-      $('#twittle-stream-username').text(username + "'s Twittle Stream");
-      $('#twittle-stream-home-btn').show();
-    }
-    updateStream(true);
-  }, 400);
-
-  // Reappear stream
-  if (!isSameStream) {
-    setTimeout(function() {
-      // Reappear the stream
-      $('#twittle-stream').fadeIn();
-    }, 400);
-  }
-      
-
-
-}, 800);
-
-
-
-/* Function: updateStream
-===============================================================================
-Checks for new tweets in the displayed stream and displays them.
-*/
-var updateStream = function(isNewDisplay) {
-  // Reset 'last tweet' if displaying a new timeline
-  if (isNewDisplay) {
-    lastTweet = undefined;
-    twittles.reset([]);
-  };
-
-  // Collect new tweets based on last displayed tweet
-  var newTweets = 
-    displayedStream.slice(_.indexOf(displayedStream, lastTweet) + 1);
-
-  // Format and display each new tweet
-  _.each(newTweets, function(tweet) {
-    // If on home stream, only display Twits following
-    if ((displayedStream === streams.home && 
-        !_.contains(twitsFollowing.pluck('username'), tweet.user) &&
-        tweet.user !== visitor)) {
-      return;
-    }
-
-    twittles.addTwittle(tweet);
-    lastTweet = tweet;
-  });
-
-};
-
-
-
-
-/* Function: stopFollowingTwit
-===============================================================================
-Removes the Twit from the list of Following, and refreshes the stream.
-*/
-
-var stopFollowingTwit = function(user) {
-  twitsFollowing.remove(user);
-  updateStream(true);  
-}
-
-
-/* Function: followTwit
-===============================================================================
-Starts following a user-entered Twit, and refreshes the stream.
-*/
-
-var followTwit = function(username) {
-  // Display error if user does not exist
-  if (!_.contains(twitList, username)) {
-    $('#form-follow-twit')
-      .append($('<p class="text-danger" id="follow-twit-error"></p>')
+  followTwit: function(e) {
+    e.preventDefault();
+    var username = this.$('input').val();
+    // Display error if user does not exist
+    if (!_.contains(twitList, username)) {
+      this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
               .text('User "' + username + '" does not exist.'));
-    
-    // Remove error after set duration
-    setTimeout(function() {
-      $('#follow-twit-error').remove();
-    }, 4000);
+      
+      // Remove error after set duration
+      setTimeout(function() {
+        $('#follow-twit-error').remove();
+      }, 4000);
 
-  // Add user
-  } else if (!_.contains(twitsFollowing.pluck('username'), username)) {
-    var twit = new TwitModel({username: username});
-    twitsFollowing.add(twit);
-  } 
-}
+    // Display error if user already added
+    } else if (_.contains(this.collection.pluck('username'), username)) {
+      this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
+              .text('Already following user "' + username + '".'));
+      
+      // Remove error after set duration
+      setTimeout(function() {
+        $('#follow-twit-error').remove();
+      }, 4000);
+
+      this.$('input').val('');
+
+    // Otherwise add user
+    } else if (!_.contains(this.collection.pluck('username'), username)) {
+      var twit = new TwitModel({username: username});
+      this.collection.add(twit);
+      this.$('input').val('');
+    } 
+  }
+
+});
 
 
-/* Function: buttonFollowTwit
-===============================================================================
-Button handler to Follow a new Twit
-*/
-var buttonFollowTwit = function() {
-  var username = $('#form-follow-twit input').val();
-  followTwit(username);
-  $('#form-follow-twit input').val('');
-}
+
+/******************************************************************************
+DOM Ready
+******************************************************************************/
 
 
-/* DOM Ready
-===============================================================================
-*/
 
 $(document).ready(function(){
-  /* Set up Twittles stream */
-  twittles = new Twittles({});
-  twittlesView = new TwittlesView({collection: twittles});
-  twittles.loadStream(streams.home);
+
   displayedStream = streams.home;
-  $('#twittle-stream').append(twittlesView.render().el);
 
-
+  /* Set up Twittles stream */
+  twittles = new App.Collections.Twittles({});
   
   /* Load initial staging of twits following */
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
-  twitsFollowing = new TwitsFollowing({});
-  twitsFollowing.loadUserTwitList();
-  twitsFollowingView = new TwitsFollowingView({collection: twitsFollowing});
-  $('#panel-twit-list').prepend(twitsFollowingView.render().el);
+  twitsFollowing = new App.Collections.TwitsFollowing({});
 
-  /* Regularly update stream */
-  setInterval(function() {
-    updateStream();
-  }, 1000);
-  setInterval(function() {
-    loadStream(displayedStream);
-  }, 60000);  // reload stream contents to update relative times
+  /* Create views */
+  twitsFollowingView = new App.Views.TwitsFollowing({collection: twitsFollowing});
+  twittlesView = new App.Views.Twittles({collection: twittles});
 
-  // Event listener to create Twittle
-  $('#btn-create-twittle').click(function() {
-    var msg = $('#text-create-twittle').val();
-    writeTweet(msg);
-    $('#text-create-twittle').val('');
-    updateStream();
-  })
+  /* Create forms */
+  // Follow twit form
+  var followTwitForm = new App.Forms.FollowTwitForm({collection: twitsFollowing});
+  $('#form-follow-twit').append(followTwitForm.render().el);
+  // Create Twittle form
+  var createTwittleForm = new App.Forms.CreateTwittle({collection: twittles});
+  $('#form-create-twittle').append(createTwittleForm.render().el);
+
+
+  // // Event listener to create Twittle
+  // $('#btn-create-twittle').click(function() {
+  //   var msg = $('#text-create-twittle').val();
+  //   writeTweet(msg);
+  //   $('#text-create-twittle').val('');
+  //   twittles.updateStream();
+  // })
 
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
-    loadStream(streams.home, "");
+    twittles.loadStream(streams.home, "");
   });
-
-  // Event listener for input box to Follow Twit
-  $('#form-follow-twit input').keyup(function(e) {
-    if (e.keyCode === 13) {
-      buttonFollowTwit();
-    }
-  });
-
-  // Event listener for Follow button to Follow Twit
-  $('#form-follow-twit button').click(buttonFollowTwit);
 
   // Listener for Twittle display limit
   $('#select-twittle-display-limit').change(function() {
     MAX_TWITTLES_DISPLAYED = $(this).val();
-    updateStream(true);
+    twittles.updateStream(true);
   })
 
 

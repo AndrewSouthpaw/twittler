@@ -1,7 +1,7 @@
 <!--
 Created by: Andrew Smith
-Release: 2.0
-Date: 2014-11-23
+Release: 2.1
+Date: 2014-11-27
 Using "data_generator.js" script file created by Hack Reactor.
 -->
 
@@ -13,10 +13,8 @@ Using "data_generator.js" script file created by Hack Reactor.
   <script src="js/jquery.js"></script>
 
   <!-- Twitter Bootstrap -->
-  <!-- Latest compiled and minified CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
-  <!-- Latest compiled and minified JavaScript -->
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <script src="js/bootstrap.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- / Twitter Bootstrap -->
 
@@ -79,13 +77,7 @@ Using "data_generator.js" script file created by Hack Reactor.
           <div class="panel-heading">
             <h3 class="panel-title">Twittle About Something</h3>
           </div>
-          <div class="panel-body">
-            <textarea class="form-control" rows="3" id="text-create-twittle"
-              placeholder="lolsrsly?"></textarea>
-            <br>  
-            <button type="button" class="btn btn-info" id="btn-create-twittle">
-              Twittle!
-            </button>
+          <div class="panel-body" id="form-create-twittle">
           </div>
         </div>
 
@@ -102,8 +94,6 @@ Using "data_generator.js" script file created by Hack Reactor.
 
             <!-- Follow A Twit Form -->
             <div class="form-inline" id="form-follow-twit">
-              <input type="text" placeholder="Follow A Twit" class="form-control"></input>
-              <button class="btn btn-info" id="btn-follow-twit">Follow</button>
             </div>
           </div>
         </div>
