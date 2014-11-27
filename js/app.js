@@ -30,7 +30,11 @@ var twittles;
 var twittlesView;
 var twitsFollowing;
 var twitsFollowingView;
-
+var App = {    // contains Backbone info
+  Models: {},
+  Views: {},
+  Collections: {}
+};  
 
 
 /******************************************************************************
@@ -39,22 +43,18 @@ Twittle Backbone
 
 
 
-/*
-TwittleModel
+/* Model: Twittle
 ===============================================================================
-Contains data for a Twittle
-*/
-var TwittleModel = Backbone.Model.extend({
+Contains data for a Twittle */
+App.Models.Twittle = Backbone.Model.extend({
 });
 
 
-/*
-TwittleView
+/* View: Twittle
 ===============================================================================
-Provides view for TwittleModel
-*/
+Provides view for Twittle */
 
-var TwittleView = Backbone.View.extend({
+App.Views.Twittle = Backbone.View.extend({
   className: 'twittle panel panel-default twittleView',
   tagName: 'div',
   template: 
@@ -88,13 +88,12 @@ var TwittleView = Backbone.View.extend({
 });
 
 
-/* Twittles
+/* Collection: Twittles
 ===============================================================================
-Collection of TwittleModels
-*/
+Collection of Twittles */
 
-var Twittles = Backbone.Collection.extend({
-  model: TwittleModel,
+App.Collections.Twittles = Backbone.Collection.extend({
+  model: App.Models.Twittle,
   initialize: function() {
     this.on('remove', this.hideModel, this);
   },
@@ -171,12 +170,11 @@ var Twittles = Backbone.Collection.extend({
 });
 
 
-/* TwittlesView
+/* View: Twittles
 ===============================================================================
-CollectionView for Twittles
-*/
+CollectionView for Twittles */
 
-var TwittlesView = Backbone.View.extend({
+App.Views.Twittles = Backbone.View.extend({
   className: 'twittlesView',
   initialize: function() {
     this.collection.on('change', this.render, this);
@@ -204,7 +202,7 @@ var TwittlesView = Backbone.View.extend({
   },
 
   addOne: function(model) {
-    var view = new TwittleView({model: model});
+    var view = new App.Views.Twittle({model: model});
     this.$el.prepend(view.render().el);
   }
 });
@@ -222,9 +220,17 @@ var TwittlesView = Backbone.View.extend({
 TwitsFollowing Backbone
 ******************************************************************************/
 
-var TwitModel = Backbone.Model.extend({});
+/* Model: Twit
+===============================================================================
+To track users following */
+App.Models.Twit = Backbone.Model.extend({
 
-var TwitFollowingView = Backbone.View.extend({
+});
+
+/* View: TwitFollowing
+===============================================================================
+View for following a twit */
+App.Views.TwitFollowing = Backbone.View.extend({
   tagName: 'div',
   className: 'panel panel-default',
   template:
@@ -237,9 +243,7 @@ var TwitFollowingView = Backbone.View.extend({
                '</div>'),
   events: {
     "click span.glyphicon-ban-circle": function() {
-      stopFollowingTwit(this.model);
-      this.model.trigger('hide');
-      this.model.destroy();
+      this.stopFollowingTwit();
     }, 
   }, 
 
@@ -255,11 +259,21 @@ var TwitFollowingView = Backbone.View.extend({
   remove: function(){
     this.$el.remove();
   },
+
+  stopFollowingTwit: function() {
+    // Removes the Twit from the list of Following, and refreshes the stream.
+    this.remove(this);
+    this.model.trigger('hide');
+    this.model.destroy();
+    twittles.updateStream(true);  
+  }
 });
 
-
-var TwitsFollowing = Backbone.Collection.extend({
-  model: TwitModel,
+/* Collection: TwitsFollowing
+===============================================================================
+Contains all the twits being followed */
+App.Collections.TwitsFollowing = Backbone.Collection.extend({
+  model: App.Models.Twit,
   loadUserTwitList: function(){
     this.reset([]);
     twitListFollowing.forEach(function(username) {
@@ -269,8 +283,10 @@ var TwitsFollowing = Backbone.Collection.extend({
 });
 
 
-
-var TwitsFollowingView = Backbone.View.extend({
+/* Collection View: TwitsFollowing
+===============================================================================
+Collection view for twits being followed */
+App.Views.TwitsFollowing = Backbone.View.extend({
   className: 'twitsFollowingView',
   initialize: function(){
     this.collection.on('change', this.render, this);
@@ -285,7 +301,7 @@ var TwitsFollowingView = Backbone.View.extend({
   render: function(){
     this.$el.empty();
     this.collection.forEach(function(model) {
-      var view = new TwitFollowingView({model: model});
+      var view = new App.Views.TwitFollowing({model: model});
       this.$el.append(view.render().el);
     }, this);
     return this;
@@ -293,17 +309,6 @@ var TwitsFollowingView = Backbone.View.extend({
 });
 
 
-
-
-/* Function: stopFollowingTwit
-===============================================================================
-Removes the Twit from the list of Following, and refreshes the stream.
-*/
-
-var stopFollowingTwit = function(user) {
-  twitsFollowing.remove(user);
-  twittles.updateStream(true);  
-}
 
 
 /* Function: followTwit
@@ -325,7 +330,7 @@ var followTwit = function(username) {
 
   // Add user
   } else if (!_.contains(twitsFollowing.pluck('username'), username)) {
-    var twit = new TwitModel({username: username});
+    var twit = new App.Models.Twit({username: username});
     twitsFollowing.add(twit);
   } 
 }
@@ -342,24 +347,24 @@ var buttonFollowTwit = function() {
 }
 
 
-/* DOM Ready
-===============================================================================
-*/
+/******************************************************************************
+DOM Ready
+******************************************************************************/
 
 $(document).ready(function(){
 
   displayedStream = streams.home;
 
   /* Set up Twittles stream */
-  twittles = new Twittles({});
+  twittles = new App.Collections.Twittles({});
   
   /* Load initial staging of twits following */
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
-  twitsFollowing = new TwitsFollowing({});
+  twitsFollowing = new App.Collections.TwitsFollowing({});
 
   /* Create views */
-  twitsFollowingView = new TwitsFollowingView({collection: twitsFollowing});
-  twittlesView = new TwittlesView({collection: twittles});
+  twitsFollowingView = new App.Views.TwitsFollowing({collection: twitsFollowing});
+  twittlesView = new App.Views.Twittles({collection: twittles});
 
   // Event listener to create Twittle
   $('#btn-create-twittle').click(function() {
