@@ -216,6 +216,8 @@ var TwitsFollowingView = Backbone.View.extend({
       this.render();
       updateStream(true);
     }, this);
+    this.collection.loadUserTwitList();
+    $('#panel-twit-list').prepend(this.render().el);
   },
 
   render: function(){
@@ -370,9 +372,7 @@ $(document).ready(function(){
   /* Load initial staging of twits following */
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   twitsFollowing = new TwitsFollowing({});
-  twitsFollowing.loadUserTwitList();
   twitsFollowingView = new TwitsFollowingView({collection: twitsFollowing});
-  $('#panel-twit-list').prepend(twitsFollowingView.render().el);
 
   /* Regularly update stream */
   setInterval(function() {
