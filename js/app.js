@@ -210,10 +210,38 @@ App.Views.Twittles = Backbone.View.extend({
 
 
 
+/* Form: CreateTwittle
+===============================================================================
+Allows user to write a new Twittle */
 
+App.Forms.CreateTwittle = Backbone.View.extend({
+  template:
+    _.template('<form>' +
+               // '<input type="text" name="message" />' +
+               '<textarea class="form-control" rows="3" id="text-create-twittle"' +
+               '  placeholder="lolsrsly?!"></textarea>' +
+               '<br>' +
+               '<button class="btn btn-info" id="btn-create-twittle">' +
+               '  Twittle!' +
+               '</button></form>'),
 
+  events: {
+    submit: 'create',
+  },
 
+  create: function(e){
+    e.preventDefault();
+    var msg = this.$('textarea').val();
+    writeTweet(msg);
+    this.$('textarea').val('');
+    this.collection.updateStream();
+  },
 
+  render: function(){
+    this.$el.html(this.template());
+    return this;
+  },
+});
 
 
 
@@ -393,15 +421,18 @@ $(document).ready(function(){
   // Follow twit form
   var followTwitForm = new App.Forms.FollowTwitForm({collection: twitsFollowing});
   $('#form-follow-twit').append(followTwitForm.render().el);
+  // Create Twittle form
+  var createTwittleForm = new App.Forms.CreateTwittle({collection: twittles});
+  $('#form-create-twittle').append(createTwittleForm.render().el);
 
 
-  // Event listener to create Twittle
-  $('#btn-create-twittle').click(function() {
-    var msg = $('#text-create-twittle').val();
-    writeTweet(msg);
-    $('#text-create-twittle').val('');
-    twittles.updateStream();
-  })
+  // // Event listener to create Twittle
+  // $('#btn-create-twittle').click(function() {
+  //   var msg = $('#text-create-twittle').val();
+  //   writeTweet(msg);
+  //   $('#text-create-twittle').val('');
+  //   twittles.updateStream();
+  // })
 
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
