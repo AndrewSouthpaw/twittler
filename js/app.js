@@ -142,15 +142,10 @@ var Twittles = Backbone.Collection.extend({
 
   loadStream: _.throttle(function(stream, username) {
     // Completely reloads a stream
-    // Throttle to elegantly handle multiple concurrent calls to loadStream
-    var isSameStream = displayedStream === stream;
-
-    if (isSameStream) { return this.updateStream(true); };
+    if (displayedStream === stream) return this.updateStream(true);
 
     // Disappear the stream to change the stream contents
-    if (!isSameStream) {
-      $('#twittle-stream').fadeOut();
-    }
+    $('#twittle-stream').fadeOut();
 
     displayedStream = stream;
     // Update stream contents after disappear animation finishes
@@ -166,12 +161,10 @@ var Twittles = Backbone.Collection.extend({
     }, 400);
 
     // Reappear stream
-    if (!isSameStream) {
-      setTimeout(function() {
-        // Reappear the stream
-        $('#twittle-stream').fadeIn();
-      }, 400);
-    }
+    setTimeout(function() {
+      // Reappear the stream
+      $('#twittle-stream').fadeIn();
+    }, 400);
   }, 800)
 
 
@@ -190,7 +183,6 @@ var TwittlesView = Backbone.View.extend({
     this.collection.on('add', this.addOne, this);
     this.collection.on('reset', this.render, this);
     this.collection.loadStream(streams.home);
-    displayedStream = streams.home;
     $('#twittle-stream').append(this.render().el);
   },
 
@@ -346,15 +338,20 @@ var buttonFollowTwit = function() {
 */
 
 $(document).ready(function(){
+
+  displayedStream = streams.home;
+
   /* Set up Twittles stream */
   twittles = new Twittles({});
-  twittlesView = new TwittlesView({collection: twittles});
-
   
   /* Load initial staging of twits following */
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   twitsFollowing = new TwitsFollowing({});
+
+  /* Create views */
   twitsFollowingView = new TwitsFollowingView({collection: twitsFollowing});
+  twittlesView = new TwittlesView({collection: twittles});
+
 
   /* Regularly update stream */
   setInterval(function() {
