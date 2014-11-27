@@ -367,20 +367,6 @@ var FollowTwitForm = Backbone.View.extend({
 
 
 
-
-/* Function: stopFollowingTwit
-===============================================================================
-Removes the Twit from the list of Following, and refreshes the stream.
-*/
-
-var stopFollowingTwit = function(user) {
-  twitsFollowing.remove(user);
-  twittles.updateStream(true);  
-}
-
-
-
-
 /******************************************************************************
 DOM Ready
 ******************************************************************************/
