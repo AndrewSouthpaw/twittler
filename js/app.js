@@ -222,7 +222,9 @@ var TwittlesView = Backbone.View.extend({
 TwitsFollowing Backbone
 ******************************************************************************/
 
-var TwitModel = Backbone.Model.extend({});
+var TwitModel = Backbone.Model.extend({
+
+});
 
 var TwitFollowingView = Backbone.View.extend({
   tagName: 'div',
@@ -237,9 +239,7 @@ var TwitFollowingView = Backbone.View.extend({
                '</div>'),
   events: {
     "click span.glyphicon-ban-circle": function() {
-      stopFollowingTwit(this.model);
-      this.model.trigger('hide');
-      this.model.destroy();
+      this.stopFollowingTwit();
     }, 
   }, 
 
@@ -255,6 +255,14 @@ var TwitFollowingView = Backbone.View.extend({
   remove: function(){
     this.$el.remove();
   },
+
+  stopFollowingTwit: function() {
+    // Removes the Twit from the list of Following, and refreshes the stream.
+    this.remove(this);
+    this.model.trigger('hide');
+    this.model.destroy();
+    twittles.updateStream(true);  
+  }
 });
 
 
@@ -293,17 +301,6 @@ var TwitsFollowingView = Backbone.View.extend({
 });
 
 
-
-
-/* Function: stopFollowingTwit
-===============================================================================
-Removes the Twit from the list of Following, and refreshes the stream.
-*/
-
-var stopFollowingTwit = function(user) {
-  twitsFollowing.remove(user);
-  twittles.updateStream(true);  
-}
 
 
 /* Function: followTwit
