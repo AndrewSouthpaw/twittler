@@ -386,7 +386,7 @@ App.Forms.FollowTwitForm = Backbone.View.extend({
 
     // Otherwise add user
     } else if (!_.contains(this.collection.pluck('username'), username)) {
-      var twit = new TwitModel({username: username});
+      var twit = new App.Models.Twit({username: username});
       this.collection.add(twit);
       this.$('input').val('');
     } 
