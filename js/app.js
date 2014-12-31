@@ -182,7 +182,7 @@ App.Views.Twittles = Backbone.View.extend({
     this.collection.on('add', this.addOne, this);
     this.collection.on('reset', this.render, this);
     this.collection.loadStream(streams.home);
-    $('#twittle-stream').append(this.render().el);
+    this.$el.append(this.render().el);
 
     /* Regularly check for new twittles */
     setInterval(function() {
@@ -217,7 +217,6 @@ Allows user to write a new Twittle */
 App.Forms.CreateTwittle = Backbone.View.extend({
   template:
     _.template('<form>' +
-               // '<input type="text" name="message" />' +
                '<textarea class="form-control" rows="3" id="text-create-twittle"' +
                '  placeholder="lolsrsly?!"></textarea>' +
                '<br>' +
@@ -227,6 +226,10 @@ App.Forms.CreateTwittle = Backbone.View.extend({
 
   events: {
     submit: 'create',
+  },
+
+  initialize: function(){
+    this.$el.append(this.render().el);
   },
 
   create: function(e){
@@ -324,7 +327,7 @@ App.Views.TwitsFollowing = Backbone.View.extend({
       twittles.updateStream(true);
     }, this);
     this.collection.loadUserTwitList();
-    $('#panel-twit-list').prepend(this.render().el);
+    this.$el.prepend(this.render().el);
   },
 
   render: function(){
@@ -352,6 +355,10 @@ App.Forms.FollowTwitForm = Backbone.View.extend({
 
   events: {
     submit: 'followTwit'
+  },
+
+  initialize: function(){
+    this.$el.append(this.render().el);
   },
 
   render: function(){
@@ -414,25 +421,27 @@ $(document).ready(function(){
   twitsFollowing = new App.Collections.TwitsFollowing({});
 
   /* Create views */
-  twitsFollowingView = new App.Views.TwitsFollowing({collection: twitsFollowing});
-  twittlesView = new App.Views.Twittles({collection: twittles});
+  twitsFollowingView = new App.Views.TwitsFollowing({
+    collection: twitsFollowing,
+    el: $('#panel-twit-list')
+  });
+  twittlesView = new App.Views.Twittles({
+    collection: twittles,
+    el: $('#twittle-stream')
+  });
 
   /* Create forms */
   // Follow twit form
-  var followTwitForm = new App.Forms.FollowTwitForm({collection: twitsFollowing});
-  $('#form-follow-twit').append(followTwitForm.render().el);
+  var followTwitForm = new App.Forms.FollowTwitForm({
+    collection: twitsFollowing,
+    el: $('#form-follow-twit')
+  });
+  
   // Create Twittle form
-  var createTwittleForm = new App.Forms.CreateTwittle({collection: twittles});
-  $('#form-create-twittle').append(createTwittleForm.render().el);
-
-
-  // // Event listener to create Twittle
-  // $('#btn-create-twittle').click(function() {
-  //   var msg = $('#text-create-twittle').val();
-  //   writeTweet(msg);
-  //   $('#text-create-twittle').val('');
-  //   twittles.updateStream();
-  // })
+  var createTwittleForm = new App.Forms.CreateTwittle({
+    collection: twittles,
+    el: $('#form-create-twittle')
+  });
 
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
