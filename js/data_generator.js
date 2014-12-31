@@ -15,6 +15,7 @@ streams.users.sharksforcheap = [];
 streams.users.mracus = [];
 streams.users.douglascalhoun = [];
 window.users = Object.keys(streams.users);
+window.tweetIDCounter = 1;
 
 // utility function for adding tweets to our data structures
 var addTweet = function(newTweet){
@@ -46,6 +47,7 @@ var generateRandomTweet = function(){
   tweet.user = randomElement(users);
   tweet.message = randomMessage();
   tweet.created_at = new Date();
+  tweet.id = tweetIDCounter++;
   addTweet(tweet);
 };
 
