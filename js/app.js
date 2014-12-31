@@ -5,8 +5,8 @@ File: app.js
 Provides functionality to run Twittle site.
 
 Created by: Andrew Smith
-Release: 2.1
-Date: 2014-11-27
+Release: 2.2
+Date: 2014-12-30
 */
 
 
