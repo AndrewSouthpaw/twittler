@@ -120,10 +120,9 @@ App.Collections.Twittles = Backbone.Collection.extend({
 
     // Collect new tweets based on last displayed tweet
     var newTweets = 
-      displayedStream.slice(isNewDisplay 
-                            ? -MAX_TWITTLES_DISPLAYED
-                            : _.indexOf(displayedStream, lastTweet) + 1
-                            );
+      displayedStream.slice(isNewDisplay ? -MAX_TWITTLES_DISPLAYED
+                                         : _.indexOf(displayedStream, lastTweet) + 1
+      );
 
     // Format and display each new tweet
     _.each(newTweets, function(tweet) {
@@ -187,17 +186,16 @@ App.Views.Twittles = Backbone.View.extend({
     this.collection.on('reset', this.render, this);
     this.$el.append(this.render().el);
 
-    /* Regularly check for new twittles */
+    // Set interval to regularly update stream contents, and once per minute
+    // completely reload the stream to update relative times display on
+    // twittles
     setInterval(function() {
       twittles.updateStream();
     }, 1000);
-    /* Reload stream contents to update relative times */
     setInterval(function() {
       twittles.updateStream(true);
     }, 60000); 
   },
-
-
 
   render: function() {
     this.$el.empty();
@@ -258,6 +256,7 @@ TwitsFollowing Backbone
 /* Model: Twit
 ===============================================================================
 To track users following */
+
 App.Models.Twit = Backbone.Model.extend({
 
 });
@@ -265,6 +264,7 @@ App.Models.Twit = Backbone.Model.extend({
 /* View: TwitFollowing
 ===============================================================================
 View for following a twit */
+
 App.Views.TwitFollowing = Backbone.View.extend({
   tagName: 'div',
   className: 'panel panel-default',
@@ -296,7 +296,7 @@ App.Views.TwitFollowing = Backbone.View.extend({
   },
 
   stopFollowingTwit: function() {
-    // Removes the Twit from the list of Following, and refreshes the stream.
+    // Removes the Twit from the list of following, and refreshes the stream.
     this.remove(this);
     this.model.trigger('hide');
     this.model.destroy();
@@ -307,6 +307,7 @@ App.Views.TwitFollowing = Backbone.View.extend({
 /* Collection: TwitsFollowing
 ===============================================================================
 Contains all the twits being followed */
+
 App.Collections.TwitsFollowing = Backbone.Collection.extend({
   model: App.Models.Twit,
   loadUserTwitList: function(){
@@ -321,6 +322,7 @@ App.Collections.TwitsFollowing = Backbone.Collection.extend({
 /* Collection View: TwitsFollowing
 ===============================================================================
 Collection view for twits being followed */
+
 App.Views.TwitsFollowing = Backbone.View.extend({
   className: 'twitsFollowingView',
   initialize: function(){
@@ -371,13 +373,15 @@ App.Forms.FollowTwitForm = Backbone.View.extend({
 
   followTwit: function(e) {
     e.preventDefault();
+    
     var username = this.$('input').val();
+
     // Display error if user does not exist
     if (!_.contains(twitList, username)) {
       this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
               .text('User "' + username + '" does not exist.'));
       
-      // Remove error after set duration
+      // ...and then remove error after set duration
       setTimeout(function() {
         $('#follow-twit-error').remove();
       }, 4000);
@@ -387,7 +391,7 @@ App.Forms.FollowTwitForm = Backbone.View.extend({
       this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
               .text('Already following user "' + username + '".'));
       
-      // Remove error after set duration
+      // ... and then remove error after set duration
       setTimeout(function() {
         $('#follow-twit-error').remove();
       }, 4000);
@@ -416,14 +420,14 @@ $(document).ready(function(){
 
   displayedStream = streams.home;
 
-  /* Set up Twittles stream */
+  // Set up Twittles stream
   twittles = new App.Collections.Twittles({});
   
-  /* Load initial staging of twits following */
+  // Load initial staging of twits following 
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   twitsFollowing = new App.Collections.TwitsFollowing({});
 
-  /* Create views */
+  // Create views 
   twitsFollowingView = new App.Views.TwitsFollowing({
     collection: twitsFollowing,
     el: $('#panel-twit-list')
@@ -433,14 +437,11 @@ $(document).ready(function(){
     el: $('#twittle-stream')
   });
 
-  /* Create forms */
-  // Follow twit form
+  // Create forms 
   var followTwitForm = new App.Forms.FollowTwitForm({
     collection: twitsFollowing,
     el: $('#form-follow-twit')
   });
-  
-  // Create Twittle form
   var createTwittleForm = new App.Forms.CreateTwittle({
     collection: twittles,
     el: $('#form-create-twittle')
