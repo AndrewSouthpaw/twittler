@@ -140,15 +140,19 @@ App.Collections.Twittles = Backbone.Collection.extend({
 
   },
 
+  /* loadStream
+   * ====================
+   * Governs animation to load a different stream. Fades out the current
+   * stream, loads the new one, fades it back in. Function is throttled to
+   * prevent accidentally triggering loadStream multiple times, creating
+   * aberrant animation behavior.
+   */
   loadStream: _.throttle(function(stream, username) {
-    // Completely reloads a stream
-    if (displayedStream === stream) return this.updateStream(true);
-
     // Disappear the stream to change the stream contents
     $('#twittle-stream').fadeOut();
 
-    displayedStream = stream;
     // Update stream contents after disappear animation finishes
+    displayedStream = stream;
     setTimeout(function() {
       if (displayedStream === streams.home) {
         $('#twittle-stream-username').text('Twittle Stream');
@@ -181,7 +185,6 @@ App.Views.Twittles = Backbone.View.extend({
     this.collection.on('change', this.render, this);
     this.collection.on('add', this.addOne, this);
     this.collection.on('reset', this.render, this);
-    this.collection.loadStream(streams.home);
     this.$el.append(this.render().el);
 
     /* Regularly check for new twittles */
@@ -190,7 +193,7 @@ App.Views.Twittles = Backbone.View.extend({
     }, 1000);
     /* Reload stream contents to update relative times */
     setInterval(function() {
-      twittles.loadStream(displayedStream);
+      twittles.updateStream(true);
     }, 60000); 
   },
 
@@ -445,7 +448,7 @@ $(document).ready(function(){
 
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
-    twittles.loadStream(streams.home, "");
+    twittles.loadStream(streams.home);
   });
 
   // Listener for Twittle display limit

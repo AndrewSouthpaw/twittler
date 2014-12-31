@@ -1,3 +1,6 @@
+/* data_generator.js was a starter file provided by Hack Reactor. I have made
+ * small modifications to expand what I can do with the website. */
+
 /*
  * NOTE: This file generates fake tweet data, and is not intended to be part of your implementation.
  * You can safely leave this file untouched, and confine your changes to index.html.
