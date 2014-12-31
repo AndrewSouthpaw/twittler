@@ -1,3 +1,6 @@
+/* data_generator.js was a starter file provided by Hack Reactor. I have made
+ * small modifications to expand what I can do with the website. */
+
 /*
  * NOTE: This file generates fake tweet data, and is not intended to be part of your implementation.
  * You can safely leave this file untouched, and confine your changes to index.html.
@@ -12,6 +15,7 @@ streams.users.sharksforcheap = [];
 streams.users.mracus = [];
 streams.users.douglascalhoun = [];
 window.users = Object.keys(streams.users);
+window.tweetIDCounter = 1;
 
 // utility function for adding tweets to our data structures
 var addTweet = function(newTweet){
@@ -43,6 +47,7 @@ var generateRandomTweet = function(){
   tweet.user = randomElement(users);
   tweet.message = randomMessage();
   tweet.created_at = new Date();
+  tweet.id = tweetIDCounter++;
   addTweet(tweet);
 };
 

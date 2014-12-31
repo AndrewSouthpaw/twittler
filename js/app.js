@@ -120,10 +120,9 @@ App.Collections.Twittles = Backbone.Collection.extend({
 
     // Collect new tweets based on last displayed tweet
     var newTweets = 
-      displayedStream.slice(isNewDisplay 
-                            ? -MAX_TWITTLES_DISPLAYED
-                            : _.indexOf(displayedStream, lastTweet) + 1
-                            );
+      displayedStream.slice(isNewDisplay ? -MAX_TWITTLES_DISPLAYED
+                                         : _.indexOf(displayedStream, lastTweet) + 1
+      );
 
     // Format and display each new tweet
     _.each(newTweets, function(tweet) {
@@ -140,15 +139,19 @@ App.Collections.Twittles = Backbone.Collection.extend({
 
   },
 
+  /* loadStream
+   * ====================
+   * Governs animation to load a different stream. Fades out the current
+   * stream, loads the new one, fades it back in. Function is throttled to
+   * prevent accidentally triggering loadStream multiple times, creating
+   * aberrant animation behavior.
+   */
   loadStream: _.throttle(function(stream, username) {
-    // Completely reloads a stream
-    if (displayedStream === stream) return this.updateStream(true);
-
     // Disappear the stream to change the stream contents
     $('#twittle-stream').fadeOut();
 
-    displayedStream = stream;
     // Update stream contents after disappear animation finishes
+    displayedStream = stream;
     setTimeout(function() {
       if (displayedStream === streams.home) {
         $('#twittle-stream-username').text('Twittle Stream');
@@ -181,20 +184,18 @@ App.Views.Twittles = Backbone.View.extend({
     this.collection.on('change', this.render, this);
     this.collection.on('add', this.addOne, this);
     this.collection.on('reset', this.render, this);
-    this.collection.loadStream(streams.home);
-    $('#twittle-stream').append(this.render().el);
+    this.$el.append(this.render().el);
 
-    /* Regularly check for new twittles */
+    // Set interval to regularly update stream contents, and once per minute
+    // completely reload the stream to update relative times display on
+    // twittles
     setInterval(function() {
       twittles.updateStream();
     }, 1000);
-    /* Reload stream contents to update relative times */
     setInterval(function() {
-      twittles.loadStream(displayedStream);
+      twittles.updateStream(true);
     }, 60000); 
   },
-
-
 
   render: function() {
     this.$el.empty();
@@ -217,7 +218,6 @@ Allows user to write a new Twittle */
 App.Forms.CreateTwittle = Backbone.View.extend({
   template:
     _.template('<form>' +
-               // '<input type="text" name="message" />' +
                '<textarea class="form-control" rows="3" id="text-create-twittle"' +
                '  placeholder="lolsrsly?!"></textarea>' +
                '<br>' +
@@ -227,6 +227,10 @@ App.Forms.CreateTwittle = Backbone.View.extend({
 
   events: {
     submit: 'create',
+  },
+
+  initialize: function(){
+    this.$el.append(this.render().el);
   },
 
   create: function(e){
@@ -252,6 +256,7 @@ TwitsFollowing Backbone
 /* Model: Twit
 ===============================================================================
 To track users following */
+
 App.Models.Twit = Backbone.Model.extend({
 
 });
@@ -259,6 +264,7 @@ App.Models.Twit = Backbone.Model.extend({
 /* View: TwitFollowing
 ===============================================================================
 View for following a twit */
+
 App.Views.TwitFollowing = Backbone.View.extend({
   tagName: 'div',
   className: 'panel panel-default',
@@ -290,7 +296,7 @@ App.Views.TwitFollowing = Backbone.View.extend({
   },
 
   stopFollowingTwit: function() {
-    // Removes the Twit from the list of Following, and refreshes the stream.
+    // Removes the Twit from the list of following, and refreshes the stream.
     this.remove(this);
     this.model.trigger('hide');
     this.model.destroy();
@@ -301,6 +307,7 @@ App.Views.TwitFollowing = Backbone.View.extend({
 /* Collection: TwitsFollowing
 ===============================================================================
 Contains all the twits being followed */
+
 App.Collections.TwitsFollowing = Backbone.Collection.extend({
   model: App.Models.Twit,
   loadUserTwitList: function(){
@@ -315,6 +322,7 @@ App.Collections.TwitsFollowing = Backbone.Collection.extend({
 /* Collection View: TwitsFollowing
 ===============================================================================
 Collection view for twits being followed */
+
 App.Views.TwitsFollowing = Backbone.View.extend({
   className: 'twitsFollowingView',
   initialize: function(){
@@ -324,7 +332,7 @@ App.Views.TwitsFollowing = Backbone.View.extend({
       twittles.updateStream(true);
     }, this);
     this.collection.loadUserTwitList();
-    $('#panel-twit-list').prepend(this.render().el);
+    this.$el.prepend(this.render().el);
   },
 
   render: function(){
@@ -354,6 +362,10 @@ App.Forms.FollowTwitForm = Backbone.View.extend({
     submit: 'followTwit'
   },
 
+  initialize: function(){
+    this.$el.append(this.render().el);
+  },
+
   render: function(){
     this.$el.html(this.template());
     return this;
@@ -361,13 +373,15 @@ App.Forms.FollowTwitForm = Backbone.View.extend({
 
   followTwit: function(e) {
     e.preventDefault();
+    
     var username = this.$('input').val();
+
     // Display error if user does not exist
     if (!_.contains(twitList, username)) {
       this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
               .text('User "' + username + '" does not exist.'));
       
-      // Remove error after set duration
+      // ...and then remove error after set duration
       setTimeout(function() {
         $('#follow-twit-error').remove();
       }, 4000);
@@ -377,7 +391,7 @@ App.Forms.FollowTwitForm = Backbone.View.extend({
       this.$el.append($('<p class="text-danger" id="follow-twit-error"></p>')
               .text('Already following user "' + username + '".'));
       
-      // Remove error after set duration
+      // ... and then remove error after set duration
       setTimeout(function() {
         $('#follow-twit-error').remove();
       }, 4000);
@@ -406,37 +420,36 @@ $(document).ready(function(){
 
   displayedStream = streams.home;
 
-  /* Set up Twittles stream */
+  // Set up Twittles stream
   twittles = new App.Collections.Twittles({});
   
-  /* Load initial staging of twits following */
+  // Load initial staging of twits following 
   twitListFollowing = ["shawndrost", "sharksforcheap", "mracus", "douglascalhoun"];
   twitsFollowing = new App.Collections.TwitsFollowing({});
 
-  /* Create views */
-  twitsFollowingView = new App.Views.TwitsFollowing({collection: twitsFollowing});
-  twittlesView = new App.Views.Twittles({collection: twittles});
+  // Create views 
+  twitsFollowingView = new App.Views.TwitsFollowing({
+    collection: twitsFollowing,
+    el: $('#panel-twit-list')
+  });
+  twittlesView = new App.Views.Twittles({
+    collection: twittles,
+    el: $('#twittle-stream')
+  });
 
-  /* Create forms */
-  // Follow twit form
-  var followTwitForm = new App.Forms.FollowTwitForm({collection: twitsFollowing});
-  $('#form-follow-twit').append(followTwitForm.render().el);
-  // Create Twittle form
-  var createTwittleForm = new App.Forms.CreateTwittle({collection: twittles});
-  $('#form-create-twittle').append(createTwittleForm.render().el);
-
-
-  // // Event listener to create Twittle
-  // $('#btn-create-twittle').click(function() {
-  //   var msg = $('#text-create-twittle').val();
-  //   writeTweet(msg);
-  //   $('#text-create-twittle').val('');
-  //   twittles.updateStream();
-  // })
+  // Create forms 
+  var followTwitForm = new App.Forms.FollowTwitForm({
+    collection: twitsFollowing,
+    el: $('#form-follow-twit')
+  });
+  var createTwittleForm = new App.Forms.CreateTwittle({
+    collection: twittles,
+    el: $('#form-create-twittle')
+  });
 
   // Event listener for Home button on Twittle Stream
   $('#twittle-stream-home-btn').click(function() {
-    twittles.loadStream(streams.home, "");
+    twittles.loadStream(streams.home);
   });
 
   // Listener for Twittle display limit
