@@ -1,2 +1,5 @@
 #twittler
-This is a project I completed as a student at [Hack Reactor](http://hackreactor.com). This project was worked on with a pair.
+I completed this project during the precourse work for [Hack Reactor](http://hackreactor.com). All the work is my own.
+
+It began as an exercise to learn basic HTML, CSS, and jQuery operations. It became an exciting learning opportunity to practice Backbone. After completing the CodeSchool courses on Backbone, I refactored this project to use that framework. (You can see this in the commit history.)
+
