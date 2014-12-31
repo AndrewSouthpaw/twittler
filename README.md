@@ -1,2 +1,2 @@
 #twittler
-This is a project I completed as a student at [Hack Reactor](http://hackreactor.com). This project was worked on with a pair.
+I completed this project during the precourse work for [Hack Reactor](http://hackreactor.com). All the work is my own.
